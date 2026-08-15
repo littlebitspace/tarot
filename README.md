@@ -1,0 +1,2 @@
+# tarot
+PETSCII Tarot App
