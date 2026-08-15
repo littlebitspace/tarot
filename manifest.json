@@ -1,0 +1,488 @@
+{
+  "sets": [
+    {
+      "id": "tarotMajor",
+      "group": "Tarot",
+      "label": "Tarot Major Arcana",
+      "back": "cards/tarot/back.json",
+      "cards": [
+        {
+          "file": "cards/tarot/0000.json",
+          "name": "The Fool",
+          "meaningUpright": "Innocence, New Beginnings, Free spirit",
+          "meaningReversed": "Recklessness, Taken advantage of, Inconsideration"
+        },
+        {
+          "file": "cards/tarot/0001.json",
+          "name": "The Magician",
+          "meaningUpright": "Willpower, Desire, Creation, Manifestation",
+          "meaningReversed": "Trickery, Illusions, Out of touch"
+        },
+        {
+          "file": "cards/tarot/0002.json",
+          "name": "The High Priestess",
+          "meaningUpright": "Intuitive, Unconscious, Inner voice",
+          "meaningReversed": "Lack of center, Lost inner voice, Repressed feelings"
+        },
+        {
+          "file": "cards/tarot/0003.json",
+          "name": "The Empress",
+          "meaningUpright": "Motherhood, Fertility, Nature",
+          "meaningReversed": "Dependence, Smothering, Emptiness, Nosiness"
+        },
+        {
+          "file": "cards/tarot/0004.json",
+          "name": "The Emperor",
+          "meaningUpright": "Authority, Structure, Control, Fatherhood",
+          "meaningReversed": "Tyranny, Rigidity, Coldness"
+        },
+        {
+          "file": "cards/tarot/0005.json",
+          "name": "The Hierophant",
+          "meaningUpright": "Tradition, Conformity, Morality, Ethics",
+          "meaningReversed": "Rebellion, Subversiveness, New approaches"
+        },
+        {
+          "file": "cards/tarot/0006.json",
+          "name": "The Lovers",
+          "meaningUpright": "Partnership, Duality, Union",
+          "meaningReversed": "Loss of Balance, One-sidedness, Disharmony"
+        },
+        {
+          "file": "cards/tarot/0007.json",
+          "name": "The Chariot",
+          "meaningUpright": "Direction, Control, Willpower",
+          "meaningReversed": "Lack of control, Lack of direction, Aggression"
+        },
+        {
+          "file": "cards/tarot/0008.json",
+          "name": "Strength",
+          "meaningUpright": "Inner strength, Bravery, Compassion, Focus",
+          "meaningReversed": "Self doubt, Weakness, Insecurity"
+        },
+        {
+          "file": "cards/tarot/0009.json",
+          "name": "The Hermit",
+          "meaningUpright": "Contemplation, Search for truth, Inner guidance",
+          "meaningReversed": "Loneliness, Isolation, Lost your way"
+        },
+        {
+          "file": "cards/tarot/0010.json",
+          "name": "Wheel of Fortune",
+          "meaningUpright": "Change, Cycles, Inevitable fate",
+          "meaningReversed": "No control, Clinging to control, Bad luck"
+        },
+        {
+          "file": "cards/tarot/0011.json",
+          "name": "Justice",
+          "meaningUpright": "Cause and effect, Clarity, Truth",
+          "meaningReversed": "Dishonesty, Unaccountability, Unfairness"
+        },
+        {
+          "file": "cards/tarot/0012.json",
+          "name": "The Hanged Man",
+          "meaningUpright": "Sacrifice, Release, Martyrdom",
+          "meaningReversed": "Stalling, Needless sacrifice, Fear of sacrifice"
+        },
+        {
+          "file": "cards/tarot/0013.json",
+          "name": "Death",
+          "meaningUpright": "End of cycle, Beginnings, Change, Metamorphosis",
+          "meaningReversed": "Fear of change, Holding on, Stagnation, Decay"
+        },
+        {
+          "file": "cards/tarot/0014.json",
+          "name": "Temperance",
+          "meaningUpright": "Middle path, Patience, Finding meaning",
+          "meaningReversed": "Extremes, Excess, Lack of balance"
+        },
+        {
+          "file": "cards/tarot/0015.json",
+          "name": "The Devil",
+          "meaningUpright": "Addiction, Materialism, Playfulness",
+          "meaningReversed": "Freedom, Release, Restoring control"
+        },
+        {
+          "file": "cards/tarot/0016.json",
+          "name": "The Tower",
+          "meaningUpright": "Sudden upheaval, Broken Pride, Disaster",
+          "meaningReversed": "Disaster avoided, Delayed disaster, Fear of suffering"
+        },
+        {
+          "file": "cards/tarot/0017.json",
+          "name": "The Star",
+          "meaningUpright": "Hope, Faith, Rejuvenation",
+          "meaningReversed": "Faithlessness, Discouragement, Insecurity"
+        },
+        {
+          "file": "cards/tarot/0018.json",
+          "name": "The Moon",
+          "meaningUpright": "Unconsciousness, Illusions, Intuition",
+          "meaningReversed": "Confusion, Fear, Misinterpretation"
+        },
+        {
+          "file": "cards/tarot/0019.json",
+          "name": "The Sun",
+          "meaningUpright": "Joy, Success, Celebration, Positivity",
+          "meaningReversed": "Negativity, Depression, Sadness"
+        },
+        {
+          "file": "cards/tarot/0020.json",
+          "name": "Judgement",
+          "meaningUpright": "Reflection, Reckoning, Awakening",
+          "meaningReversed": "Lack of self awareness, Doubt, Self loathing"
+        },
+        {
+          "file": "cards/tarot/0021.json",
+          "name": "The World",
+          "meaningUpright": "Fulfillment, Harmony, Completion",
+          "meaningReversed": "Incompletion, No closure"
+        }
+      ]
+    },
+    {
+      "id": "tarotMinor",
+      "group": "Tarot",
+      "label": "Tarot Minor Arcana",
+      "back": "cards/tarot/back.json",
+      "cards": [
+        {
+          "file": "cards/tarot/0101.json",
+          "name": "Ace of Wands",
+          "meaningUpright": "Creation, Willpower, Inspiration, Desire",
+          "meaningReversed": "Lack of energy, Lack of passion, Boredom"
+        },
+        {
+          "file": "cards/tarot/0102.json",
+          "name": "Two of Wands",
+          "meaningUpright": "Planning, Making decisions, Leaving home",
+          "meaningReversed": "Fear of change, Playing safe, Bad planning"
+        },
+        {
+          "file": "cards/tarot/0103.json",
+          "name": "Three of Wands",
+          "meaningUpright": "Looking ahead, Expansion, Rapid growth",
+          "meaningReversed": "Obstacles, Delays, Frustration"
+        },
+        {
+          "file": "cards/tarot/0104.json",
+          "name": "Four of Wands",
+          "meaningUpright": "Community, Home, Celebration",
+          "meaningReversed": "Lack of support, Transience, Home conflicts"
+        },
+        {
+          "file": "cards/tarot/0105.json",
+          "name": "Five of Wands",
+          "meaningUpright": "Competition, Rivalry, Conflict",
+          "meaningReversed": "Avoiding conflict, Respecting differences"
+        },
+        {
+          "file": "cards/tarot/0106.json",
+          "name": "Six of Wands",
+          "meaningUpright": "Victory, Success, Public reward",
+          "meaningReversed": "Excess pride, Lack of recognition, Punishment"
+        },
+        {
+          "file": "cards/tarot/0107.json",
+          "name": "Seven of Wands",
+          "meaningUpright": "Perseverance, Defensive, Maintaining control",
+          "meaningReversed": "Give up, Destroyed confidence, Overwhelmed"
+        },
+        {
+          "file": "cards/tarot/0108.json",
+          "name": "Eight of Wands",
+          "meaningUpright": "Rapid action, Movement, Quick decisions",
+          "meaningReversed": "Panic, Waiting, Slowdown"
+        },
+        {
+          "file": "cards/tarot/0109.json",
+          "name": "Nine of Wands",
+          "meaningUpright": "Resilience, Grit, Last stand",
+          "meaningReversed": "Exhaustion, Fatigue, Questioning motivation"
+        },
+        {
+          "file": "cards/tarot/0110.json",
+          "name": "Ten of Wands",
+          "meaningUpright": "Accomplishment, Responsibility, Burden",
+          "meaningReversed": "Inability to delegate, Overstressed, Burnt out"
+        },
+        {
+          "file": "cards/tarot/0111.json",
+          "name": "Page of Wands",
+          "meaningUpright": "Exploration, Excitement, Freedom",
+          "meaningReversed": "Lack of direction, Procrastination, Creating conflict"
+        },
+        {
+          "file": "cards/tarot/0112.json",
+          "name": "Knight of Wands",
+          "meaningUpright": "Action, Adventure, Fearlessness",
+          "meaningReversed": "Anger, Impulsiveness, Recklessness"
+        },
+        {
+          "file": "cards/tarot/0113.json",
+          "name": "Queen of Wands",
+          "meaningUpright": "Courage, Determination, Joy",
+          "meaningReversed": "Selfishness, Jealousy, Insecurity"
+        },
+        {
+          "file": "cards/tarot/0114.json",
+          "name": "King of Wands",
+          "meaningUpright": "Big picture, Leader, Overcoming challenges",
+          "meaningReversed": "Impulsive, Overbearing, Unreal expectations"
+        },
+        {
+          "file": "cards/tarot/0201.json",
+          "name": "Ace of Cups",
+          "meaningUpright": "New feelings, Spirituality, Intuition",
+          "meaningReversed": "Emotional loss, Blocked creativity, Emptiness"
+        },
+        {
+          "file": "cards/tarot/0202.json",
+          "name": "Two of Cups",
+          "meaningUpright": "Unity, Partnership, Connection",
+          "meaningReversed": "Imbalance, Broken communication, Tension"
+        },
+        {
+          "file": "cards/tarot/0203.json",
+          "name": "Three of Cups",
+          "meaningUpright": "Friendship, Community, Happiness",
+          "meaningReversed": "Overindulgence, Gossip, Isolation"
+        },
+        {
+          "file": "cards/tarot/0204.json",
+          "name": "Four of Cups",
+          "meaningUpright": "Apathy, Contemplation, Disconnectedness",
+          "meaningReversed": "Sudden awareness, Choosing happiness, Acceptance"
+        },
+        {
+          "file": "cards/tarot/0205.json",
+          "name": "Five of Cups",
+          "meaningUpright": "Loss, Grief, Self-pity",
+          "meaningReversed": "Acceptance, Moving on, Finding peace"
+        },
+        {
+          "file": "cards/tarot/0206.json",
+          "name": "Six of Cups",
+          "meaningUpright": "Familiarity, Happy memories, Healing",
+          "meaningReversed": "Moving forward, Leaving home, Independence"
+        },
+        {
+          "file": "cards/tarot/0207.json",
+          "name": "Seven of Cups",
+          "meaningUpright": "Searching for purpose, Choices, Daydreaming",
+          "meaningReversed": "Lack of purpose, Diversion, Confusion"
+        },
+        {
+          "file": "cards/tarot/0208.json",
+          "name": "Eight of Cups",
+          "meaningUpright": "Walking away, Disillusionment, Leaving behind",
+          "meaningReversed": "Avoidance, Fear of change, Fear of loss"
+        },
+        {
+          "file": "cards/tarot/0209.json",
+          "name": "Nine of Cups",
+          "meaningUpright": "Satisfaction, Emotional stability, Luxury",
+          "meaningReversed": "Lack of inner joy, Smugness, Dissatisfaction"
+        },
+        {
+          "file": "cards/tarot/0210.json",
+          "name": "Ten of Cups",
+          "meaningUpright": "Inner happiness, Fulfillment, Dreams coming true",
+          "meaningReversed": "Shattered dreams, Broken family, Domestic disharmony"
+        },
+        {
+          "file": "cards/tarot/0211.json",
+          "name": "Page of Cups",
+          "meaningUpright": "Happy surprise, Dreamer, Sensitivity",
+          "meaningReversed": "Emotional immaturity, Insecurity, Disappointment"
+        },
+        {
+          "file": "cards/tarot/0212.json",
+          "name": "Knight of Cups",
+          "meaningUpright": "Following the heart, Idealist, Romantic",
+          "meaningReversed": "Moodiness, Disappointment"
+        },
+        {
+          "file": "cards/tarot/0213.json",
+          "name": "Queen of Cups",
+          "meaningUpright": "Compassion, Calm, Comfort",
+          "meaningReversed": "Martyrdom, Insecurity, Dependence"
+        },
+        {
+          "file": "cards/tarot/0214.json",
+          "name": "King of Cups",
+          "meaningUpright": "Compassion, Control, Balance",
+          "meaningReversed": "Coldness, Moodiness, Bad advice"
+        },
+        {
+          "file": "cards/tarot/0301.json",
+          "name": "Ace of Swords",
+          "meaningUpright": "Breakthrough, Clarity, Sharp mind",
+          "meaningReversed": "Confusion, Brutality, Chaos"
+        },
+        {
+          "file": "cards/tarot/0302.json",
+          "name": "Two of Swords",
+          "meaningUpright": "Difficult choices, Indecision, Stalemate",
+          "meaningReversed": "Lesser of two evils, No right choice, Confusion"
+        },
+        {
+          "file": "cards/tarot/0303.json",
+          "name": "Three of Swords",
+          "meaningUpright": "Heartbreak, Suffering, Grief",
+          "meaningReversed": "Recovery, Forgiveness, Moving on"
+        },
+        {
+          "file": "cards/tarot/0304.json",
+          "name": "Four of Swords",
+          "meaningUpright": "Rest, Restoration, Contemplation",
+          "meaningReversed": "Restlessness, Burnout, Stress"
+        },
+        {
+          "file": "cards/tarot/0305.json",
+          "name": "Five of Swords",
+          "meaningUpright": "Unbridled ambition, Win at all costs, Sneakiness",
+          "meaningReversed": "Lingering resentment, Desire to reconcile, Forgiveness"
+        },
+        {
+          "file": "cards/tarot/0306.json",
+          "name": "Six of Swords",
+          "meaningUpright": "Transition, Leaving behind, Moving on",
+          "meaningReversed": "Emotional baggage, Unresolved issues, Resisting transition"
+        },
+        {
+          "file": "cards/tarot/0307.json",
+          "name": "Seven of Swords",
+          "meaningUpright": "Deception, Trickery, Tactics and strategy",
+          "meaningReversed": "Coming clean, Rethinking approach, Deception"
+        },
+        {
+          "file": "cards/tarot/0308.json",
+          "name": "Eight of Swords",
+          "meaningUpright": "Imprisonment, Entrapment, Self-victimisation",
+          "meaningReversed": "Self-acceptance, New perspective, Freedom"
+        },
+        {
+          "file": "cards/tarot/0309.json",
+          "name": "Nine of Swords",
+          "meaningUpright": "Anxiety, Hopelessness, Trauma",
+          "meaningReversed": "Hope, Reaching out, Despair"
+        },
+        {
+          "file": "cards/tarot/0310.json",
+          "name": "Ten of Swords",
+          "meaningUpright": "Failure, Collapse, Defeat",
+          "meaningReversed": "Can't get worse, Only upwards, Inevitable end"
+        },
+        {
+          "file": "cards/tarot/0311.json",
+          "name": "Page of Swords",
+          "meaningUpright": "Curiosity, Restlessness, Mental energy",
+          "meaningReversed": "Deception, Manipulation, All talk"
+        },
+        {
+          "file": "cards/tarot/0312.json",
+          "name": "Knight of Swords",
+          "meaningUpright": "Action, Impulsiveness, Defending beliefs",
+          "meaningReversed": "No direction, Disregard consequences, Unpredictability"
+        },
+        {
+          "file": "cards/tarot/0313.json",
+          "name": "Queen of Swords",
+          "meaningUpright": "Complexity, Perceptiveness, Clear mindedness",
+          "meaningReversed": "Cold hearted, Cruel, Bitterness"
+        },
+        {
+          "file": "cards/tarot/0314.json",
+          "name": "King of Swords",
+          "meaningUpright": "Head over heart, Discipline, Truth",
+          "meaningReversed": "Manipulative, Cruel, Weakness"
+        },
+        {
+          "file": "cards/tarot/0401.json",
+          "name": "Ace of Coins",
+          "meaningUpright": "Opportunity, Prosperity, New venture",
+          "meaningReversed": "Lost opportunity, Missed chance, Bad investment"
+        },
+        {
+          "file": "cards/tarot/0402.json",
+          "name": "Two of Coins",
+          "meaningUpright": "Balancing decisions, Priorities, Adapting to change",
+          "meaningReversed": "Loss of balance, Disorganised, Overwhelmed"
+        },
+        {
+          "file": "cards/tarot/0403.json",
+          "name": "Three of Coins",
+          "meaningUpright": "Teamwork, Collaboration, Building",
+          "meaningReversed": "Lack of teamwork, Disorganised, Group conflict"
+        },
+        {
+          "file": "cards/tarot/0404.json",
+          "name": "Four of Coins",
+          "meaningUpright": "Conservation, Frugality, Security",
+          "meaningReversed": "Greediness, Stinginess, Possessiveness"
+        },
+        {
+          "file": "cards/tarot/0405.json",
+          "name": "Five of Coins",
+          "meaningUpright": "Need, Poverty, Insecurity",
+          "meaningReversed": "Recovery, Charity, Improvement"
+        },
+        {
+          "file": "cards/tarot/0406.json",
+          "name": "Six of Coins",
+          "meaningUpright": "Charity, Generosity, Sharing",
+          "meaningReversed": "Strings attached, Stinginess, Power and domination"
+        },
+        {
+          "file": "cards/tarot/0407.json",
+          "name": "Seven of Coins",
+          "meaningUpright": "Hard work, Perseverance, Diligence",
+          "meaningReversed": "Work without results, Distractions, Lack of rewards"
+        },
+        {
+          "file": "cards/tarot/0408.json",
+          "name": "Eight of Coins",
+          "meaningUpright": "Apprenticeship, Passion, High standards",
+          "meaningReversed": "Lack of passion, Uninspired, No motivation"
+        },
+        {
+          "file": "cards/tarot/0409.json",
+          "name": "Nine of Coins",
+          "meaningUpright": "Fruits of labour, Rewards, Luxury",
+          "meaningReversed": "Reckless spending, Living beyond means, False success"
+        },
+        {
+          "file": "cards/tarot/0410.json",
+          "name": "Ten of Coins",
+          "meaningUpright": "Legacy, Culmination, Inheritance",
+          "meaningReversed": "Fleeting success, Lack of stability, Lack of resources"
+        },
+        {
+          "file": "cards/tarot/0411.json",
+          "name": "Page of Coins",
+          "meaningUpright": "Ambition, Desire, Diligence",
+          "meaningReversed": "Lack of commitment, Greediness, Laziness"
+        },
+        {
+          "file": "cards/tarot/0412.json",
+          "name": "Knight of Coins",
+          "meaningUpright": "Efficiency, Hard work, Responsibility",
+          "meaningReversed": "Laziness, Obsessiveness, Work without reward"
+        },
+        {
+          "file": "cards/tarot/0413.json",
+          "name": "Queen of Coins",
+          "meaningUpright": "Practicality, Creature comforts, Financial security",
+          "meaningReversed": "Self-centredness, Jealousy, Smothering"
+        },
+        {
+          "file": "cards/tarot/0414.json",
+          "name": "King of Coins",
+          "meaningUpright": "Abundance, Prosperity, Security",
+          "meaningReversed": "Greed, Indulgence, Sensuality"
+        }
+      ]
+    }
+  ]
+}
