@@ -7,7 +7,7 @@
   @font-face {
     font-family: 'C64 Pro';
     src: local('C64 Pro'), local('C64 Pro Mono');
-    src: url('./C64_Pro_Mono-STYLE.woff2') format('woff2');
+    src: url('./fonts/C64_Pro_Mono-STYLE.woff2') format('woff2');
   }
   html, body { margin: 0; background: #000; height: 100%; }
   #table {
@@ -22,21 +22,17 @@
   }
   #scaleControl {
     position: absolute;
-    top: 16px;
     left: 0;
     right: 0;
     z-index: 60;
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 12px;
   }
   #scaleControl .card-pre { cursor: default; }
   #scaleControl .btn { cursor: pointer; }
   #deckArea {
     position: absolute;
-    top: 64px;
-    left: 16px;
     z-index: 50; /* must stay BELOW placed-card z-indices (start at 100+) */
   }
   #deckStack {
@@ -44,17 +40,14 @@
     touch-action: none;
   }
   #deckCount {
-    margin-top: 6px;
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
   }
   #shuffleBtn {
-    margin-top: 6px;
     cursor: pointer;
     display: inline-block;
   }
   #shuffleBtn:hover .card-pre { opacity: 0.85; }
-  #settingsPanel { margin-top: 12px; }
   #settingsPanel .card-pre[style*="cursor: pointer"]:hover { opacity: 0.85; }
   .card-pre {
     margin: 0;
@@ -66,7 +59,7 @@
     touch-action: none;
     cursor: grab;
   }
-  .card-visual { pointer-events: none; }
+  .card-visual { pointer-events: none; display: flex; justify-content: center; }
   .card-tip { pointer-events: none; }
 </style>
 </head>
@@ -305,7 +298,7 @@ async function fetchJSON(path) {
 // itself failing to load is treated as fully blocking (thrown), since
 // there's nothing to build a deck from at all in that case.
 async function loadManifest() {
-  const manifest = await fetchJSON("manifest.json");
+  const manifest = await fetchJSON("cards/manifest.json");
   const backCache = new Map(); // path -> Promise<grid>, so a shared back is only fetched/decoded once
   const errors = [];
 
@@ -350,10 +343,11 @@ function shuffle(arr) {
 }
 
 // Which physical back a card shows: its own set's back, unless "same back
-// for all cards" is on, in which case everything uses the first Tarot
-// set's back.
+// for all cards" was on as of the last shuffle (not the live checkbox —
+// see the note on lastAppliedSettings above), in which case everything
+// uses the first Tarot set's back.
 function resolveBackGrid(card) {
-  if (settings.sameBack) {
+  if (lastAppliedSettings && lastAppliedSettings.sameBack) {
     const tarotSet = CARD_SETS.find(s => s.group === "Tarot");
     if (tarotSet) return tarotSet.backGrid;
   }
@@ -391,18 +385,15 @@ function buildFrameGrid(frame, artGrid, backGrid) {
   const isBack = frame[0] >= 17;
   const source = isBack ? backGrid : artGrid;
   const localCols = isBack ? frame.map(v => v - 17) : frame;
-  const visW = localCols.length;
-  const padLeft = Math.floor((CARD_W - visW) / 2);
-  const colMap = new Array(CARD_W).fill(-1);
-  for (let k = 0; k < localCols.length; k++) colMap[padLeft + k] = localCols[k];
-  const cells = new Array(CARD_W * source.height);
-  for (let y = 0; y < source.height; y++) {
-    for (let x = 0; x < CARD_W; x++) {
-      const sc = colMap[x];
-      cells[y * CARD_W + x] = sc === -1 ? { char: " ", color: "white" } : source.cells[y * CARD_W + sc];
+  const width = localCols.length;
+  const height = source.height;
+  const cells = new Array(width * height);
+  for (let y = 0; y < height; y++) {
+    for (let k = 0; k < width; k++) {
+      cells[y * width + k] = source.cells[y * CARD_W + localCols[k]];
     }
   }
-  return { width: CARD_W, height: source.height, cells, bg: source.bg };
+  return { width, height, cells, bg: source.bg };
 }
 
 function frameSeq(forward) {
@@ -412,10 +403,25 @@ function frameSeq(forward) {
   return seq;
 }
 
+// Preferred manifest format: meaningUpright/meaningReversed as an array of
+// short phrases, e.g. ["new beginnings", "spontaneity", "a leap of faith"].
+// A plain string is still accepted (comma-split) for backward compatibility
+// with manifests written before this existed.
+function meaningToList(meaning) {
+  if (Array.isArray(meaning)) return meaning;
+  if (typeof meaning === "string") return meaning.split(",").map(s => s.trim()).filter(Boolean);
+  return [];
+}
+
 function showTip(state) {
   const card = state.card;
   if (!card.meaningUpright) { state.tipEl.innerHTML = ""; return; } // playing cards: no interpretation, ever
-  const lines = wrapText(state.reversed ? card.meaningReversed : card.meaningUpright, CARD_W + 4);
+  const items = meaningToList(state.reversed ? card.meaningReversed : card.meaningUpright);
+  const lines = [];
+  items.forEach(item => {
+    const wrapped = wrapText(item, CARD_W + 2); // 2 cols reserved for the "- " marker
+    wrapped.forEach((w, i) => lines.push(i === 0 ? `- ${w}` : `  ${w}`));
+  });
   if (state.reversed) lines.push({ text: "(reversed)", color: "grayDark" });
   const grid = makeTextGrid(lines, "grayLight");
   state.tipEl.innerHTML = "";
@@ -507,7 +513,7 @@ function trackPointer(state, startEvent, onReleaseWithoutMove) {
 function refreshCardSize(state) {
   state.el.style.width = CARD_PX_W + "px";
   state.el.style.height = CARD_PX_H + "px";
-  state.tipEl.style.top = (CARD_PX_H + 4 * SCALE) + "px";
+  state.tipEl.style.top = (CARD_PX_H + CELL_PX) + "px";
   applyCardPosition(state);
 }
 
@@ -531,7 +537,7 @@ function buildPlacedCardEl(state) {
   tip.className = "card-tip";
   tip.style.position = "absolute";
   tip.style.left = "0px";
-  tip.style.top = (CARD_PX_H + 4 * SCALE) + "px";
+  tip.style.top = (CARD_PX_H + CELL_PX) + "px";
   wrap.appendChild(tip);
 
   wrap.addEventListener("pointerdown", (e) => {
@@ -557,7 +563,7 @@ function placeNewCardFromDeck(e) {
   const instId = "c" + (++instanceCounter);
   const state = {
     instId, card, backGrid: resolveBackGrid(card), col: 0, row: 0,
-    reversed: Math.random() < 0.5,
+    reversed: (lastAppliedSettings && lastAppliedSettings.allUpright) ? false : Math.random() < 0.5,
     faceUp: false, frameIdx: 0, dir: 0, animating: false, z: 0,
   };
   const el = buildPlacedCardEl(state);
@@ -618,7 +624,7 @@ function renderDeck() {
   }
 
   deckCountEl.innerHTML = "";
-  const countGrid = makeTextGrid([String(deckOrder.length)], "white");
+  const countGrid = makeTextGrid([`Cards in deck: ${deckOrder.length}`], "white");
   deckCountEl.appendChild(buildCardEl(countGrid));
 }
 
@@ -644,22 +650,51 @@ shuffleBtnEl.addEventListener("click", () => {
   for (const state of placedCards.values()) state.el.remove();
   placedCards.clear();
   deckOrder = buildDeckFromSettings();
+  lastAppliedSettings = snapshotDeckSettings();
   renderDeck();
+  renderSettingsPanel();
 });
 
 /* =========================================================================
-   7b. SETTINGS PANEL — set checkboxes only take effect on the next
-       Shuffle (deck composition), same as "Same back for all cards" since
-       it also determines what gets built into the deck's/cards' back
-       faces at draw time. "Show Interpretations" is a pure display
-       toggle, so it applies immediately to every card already on the
-       table, no Shuffle needed.
+   7b. SETTINGS PANEL — set checkboxes, "Same back for all cards", and
+       "All cards upright" only take effect on the next Shuffle: what a
+       drawn card actually looks like (back, orientation) is locked to
+       lastAppliedSettings, not the live checkbox state, so toggling
+       something mid-table can't retroactively change draw behavior
+       before you've pressed Shuffle. "Show Interpretations" is the one
+       exception — a pure display toggle that applies immediately to
+       every card already on the table, no Shuffle needed, which is why
+       it's visually separated from the others in the panel below.
    ========================================================================= */
 const settings = {
   enabledSets: new Set(), // filled once CARD_SETS is known, see init()
   sameBack: false,
+  allUpright: false,
   showInterpretations: true,
 };
+
+// Tracks the {enabledSets, sameBack, allUpright} actually baked into the
+// current deck, so we can tell the settings panel apart from what's live
+// on the table, show/hide the "shuffle to apply" reminder, and — via
+// resolveBackGrid / placeNewCardFromDeck — make sure draw behavior uses
+// what was true as of the last shuffle, not whatever's currently checked.
+let lastAppliedSettings = null;
+
+function snapshotDeckSettings() {
+  return {
+    enabledSets: new Set(settings.enabledSets),
+    sameBack: settings.sameBack,
+    allUpright: settings.allUpright,
+  };
+}
+
+function deckSettingsMatch(a, b) {
+  if (a.sameBack !== b.sameBack) return false;
+  if (a.allUpright !== b.allUpright) return false;
+  if (a.enabledSets.size !== b.enabledSets.size) return false;
+  for (const id of a.enabledSets) if (!b.enabledSets.has(id)) return false;
+  return true;
+}
 
 function addSettingsLine(grid, onClick) {
   const el = buildCardEl(grid);
@@ -668,16 +703,21 @@ function addSettingsLine(grid, onClick) {
   return el;
 }
 
+function addBlankLine() {
+  settingsPanelEl.appendChild(buildCardEl(makeTextGrid([""], "white")));
+}
+
 function renderSettingsPanel() {
   settingsPanelEl.innerHTML = "";
   addSettingsLine(makeTextGrid(["Cards in the deck"], "white"));
+  addBlankLine();
 
   let lastGroup = null;
   for (const set of CARD_SETS) {
     if (set.group !== lastGroup) {
       lastGroup = set.group;
-      const header = addSettingsLine(makeTextGrid([set.group], "white"));
-      header.style.marginTop = "8px";
+      addSettingsLine(makeTextGrid([set.group], "white"));
+      addBlankLine();
     }
     const checked = settings.enabledSets.has(set.id);
     addSettingsLine(makeTextGrid([`[${checked ? "x" : " "}] ${set.label}`], "white"), () => {
@@ -685,15 +725,26 @@ function renderSettingsPanel() {
       else settings.enabledSets.add(set.id);
       renderSettingsPanel();
     });
+    addBlankLine();
   }
 
-  const sep = addSettingsLine(makeTextGrid(["-".repeat(20)], "grayDark"));
-  sep.style.marginTop = "8px";
+  addSettingsLine(makeTextGrid(["-".repeat(20)], "grayDark"));
+  addBlankLine();
 
   addSettingsLine(makeTextGrid([`[${settings.sameBack ? "x" : " "}] Same back for all cards`], "white"), () => {
     settings.sameBack = !settings.sameBack;
     renderSettingsPanel();
   });
+  addBlankLine();
+
+  addSettingsLine(makeTextGrid([`[${settings.allUpright ? "x" : " "}] All cards upright`], "white"), () => {
+    settings.allUpright = !settings.allUpright;
+    renderSettingsPanel();
+  });
+  addBlankLine();
+
+  addSettingsLine(makeTextGrid(["-".repeat(20)], "grayDark"));
+  addBlankLine();
 
   addSettingsLine(makeTextGrid([`[${settings.showInterpretations ? "x" : " "}] Show Interpretations`], "white"), () => {
     settings.showInterpretations = !settings.showInterpretations;
@@ -702,6 +753,11 @@ function renderSettingsPanel() {
     });
     renderSettingsPanel();
   });
+  addBlankLine();
+
+  if (lastAppliedSettings && !deckSettingsMatch(snapshotDeckSettings(), lastAppliedSettings)) {
+    addSettingsLine(makeTextGrid(["Shuffle to apply deck changes"], "yellow"));
+  }
 }
 
 /* =========================================================================
@@ -732,6 +788,20 @@ function renderScaleControl() {
   scaleControlEl.appendChild(plusEl);
 }
 
+// All UI chrome (not just card art) sits on the same CELL_PX grid — one
+// full cell of gap between stacked elements, positions as exact multiples
+// of CELL_PX. Re-run whenever CELL_PX changes (see applyScale).
+function layoutChrome() {
+  scaleControlEl.style.top = CELL_PX + "px";
+  scaleControlEl.style.gap = CELL_PX + "px";
+  const scaleControlHeight = 3 * CELL_PX; // mini buttons are 3 grid-rows tall
+  deckAreaEl.style.top = (CELL_PX + scaleControlHeight + CELL_PX) + "px";
+  deckAreaEl.style.left = CELL_PX + "px";
+  deckCountEl.style.marginTop = CELL_PX + "px";
+  shuffleBtnEl.style.marginTop = CELL_PX + "px";
+  settingsPanelEl.style.marginTop = CELL_PX + "px";
+}
+
 function applyScale(newScale) {
   newScale = clamp(newScale, 1, 4);
   if (newScale === SCALE) return;
@@ -752,11 +822,13 @@ function applyScale(newScale) {
   placedCards.forEach(refreshCardSize);
   renderDeck();
   renderScaleControl();
+  layoutChrome();
 }
 
 table.style.backgroundSize = CELL_PX + "px " + CELL_PX + "px";
 renderShuffleBtn();
 renderScaleControl();
+layoutChrome();
 
 function renderLoadErrors(errors) {
   if (!errors.length) return;
@@ -787,6 +859,7 @@ async function init() {
     CARD_SETS.filter(s => s.id === "tarotMajor" || s.id === "tarotMinor").map(s => s.id)
   );
   deckOrder = buildDeckFromSettings();
+  lastAppliedSettings = snapshotDeckSettings();
   renderDeck();
   renderSettingsPanel();
   renderLoadErrors(errors);

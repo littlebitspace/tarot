@@ -3,7 +3,7 @@
     {
       "id": "tarotMajor",
       "group": "Tarot",
-      "label": "Tarot Major Arcana",
+      "label": "Major Arcana",
       "back": "cards/tarot/back.json",
       "cards": [
         {
@@ -143,7 +143,7 @@
     {
       "id": "tarotMinor",
       "group": "Tarot",
-      "label": "Tarot Minor Arcana",
+      "label": "Minor Arcana",
       "back": "cards/tarot/back.json",
       "cards": [
         {
@@ -481,6 +481,206 @@
           "name": "King of Coins",
           "meaningUpright": "Abundance, Prosperity, Security",
           "meaningReversed": "Greed, Indulgence, Sensuality"
+        }
+      ]
+    },
+    {
+      "id": "tarotExtra1",
+      "group": "Tarot",
+      "label": "Arcana Obscura (lbs)",
+      "back": "cards/tarot/back.json",
+      "cards": [
+        {
+          "file": "cards/tarot/0522.json",
+          "name": "The Alchemist",
+          "meaningUpright": "Transformation, Experimentation, Mastery",
+          "meaningReversed": "Manipulation, Impatience, Misuse of knowledge"
+        },
+        {
+          "file": "cards/tarot/0523.json",
+          "name": "The Dreamer",
+          "meaningUpright": "Imagination, Introspection, Transcendence",
+          "meaningReversed": "Escapism, Delusion, Detachment"
+        },
+        {
+          "file": "cards/tarot/0524.json",
+          "name": "The Architect",
+          "meaningUpright": "Creation, Structure, Vision",
+          "meaningReversed": "Rigidity, Overplanning, Destruction of foundations"
+        },
+        {
+          "file": "cards/tarot/0525.json",
+          "name": "The Gardener",
+          "meaningUpright": "Growth, Nurturing, Acceptance of cycles",
+          "meaningReversed": "Neglect, Stagnation, Resistance to change"
+        },
+        {
+          "file": "cards/tarot/0526.json",
+          "name": "The False Prophet",
+          "meaningUpright": "Deception, Charisma, Misguided belief",
+          "meaningReversed": "Truth revealed, Disillusionment, Broken authority"
+        },
+        {
+          "file": "cards/tarot/0527.json",
+          "name": "The Crucible",
+          "meaningUpright": "Destruction, Purification, Necessary change",
+          "meaningReversed": "Destruction, Resistance, Ruin"
+        },
+        {
+          "file": "cards/tarot/0528.json",
+          "name": "The Hourglass",
+          "meaningUpright": "Time, Patience, Inevitability",
+          "meaningReversed": "Impatience, Lost time, Obsession with the past"
+        },
+        {
+          "file": "cards/tarot/0529.json",
+          "name": "The Beacon",
+          "meaningUpright": "Guidance, Hope, Purpose",
+          "meaningReversed": "Misguidance, Lost direction, False hope"
+        },
+        {
+          "file": "cards/tarot/0530.json",
+          "name": "The Mirror",
+          "meaningUpright": "Self-knowledge, Reflection, Truth",
+          "meaningReversed": "Self-deception, Insecurity, Distorted perception"
+        },
+        {
+          "file": "cards/tarot/0531.json",
+          "name": "The Labyrinth",
+          "meaningUpright": "Journey, Perseverance, Inner discovery",
+          "meaningReversed": "Confusion, Wandering, Repeating mistakes"
+        },
+        {
+          "file": "cards/tarot/0532.json",
+          "name": "The Abyss",
+          "meaningUpright": "The unknown, Contemplation, Acceptance",
+          "meaningReversed": "Despair, Fear, Surrender to the unknown"
+        },
+        {
+          "file": "cards/tarot/0533.json",
+          "name": "Rebirth",
+          "meaningUpright": "Renewal, Cycles, New life",
+          "meaningReversed": "Stagnation, Inability to let go, Repeating the past"
+        }
+      ]
+    },
+    {
+      "id": "playingCardsSuit1",
+      "group": "Playing Cards",
+      "label": "Suit 1 (Skulls)",
+      "back": "cards/playing-cards/back.json",
+      "cards": [
+        {
+          "file": "cards/playing-cards/0101.json",
+          "name": "Ace of Skulls"
+        },
+        {
+          "file": "cards/playing-cards/0102.json",
+          "name": "Two of Skulls"
+        },
+        {
+          "file": "cards/playing-cards/0103.json",
+          "name": "Three of Skulls"
+        },
+        {
+          "file": "cards/playing-cards/0104.json",
+          "name": "Four of Skulls"
+        },
+        {
+          "file": "cards/playing-cards/0105.json",
+          "name": "Five of Skulls"
+        },
+        {
+          "file": "cards/playing-cards/0106.json",
+          "name": "Six of Skulls"
+        },
+        {
+          "file": "cards/playing-cards/0107.json",
+          "name": "Seven of Skulls"
+        },
+        {
+          "file": "cards/playing-cards/0108.json",
+          "name": "Eight of Skulls"
+        },
+        {
+          "file": "cards/playing-cards/0109.json",
+          "name": "Nine of Skulls"
+        },
+        {
+          "file": "cards/playing-cards/0110.json",
+          "name": "Ten of Skulls"
+        },
+        {
+          "file": "cards/playing-cards/0111.json",
+          "name": "Jack of Skulls"
+        },
+        {
+          "file": "cards/playing-cards/0112.json",
+          "name": "Queen of Skulls"
+        },
+        {
+          "file": "cards/playing-cards/0113.json",
+          "name": "King of Skulls"
+        }
+      ]
+    },
+    {
+      "id": "playingCardsSuit2",
+      "group": "Playing Cards",
+      "label": "Suit 2 (Hearts)",
+      "back": "cards/playing-cards/back.json",
+      "cards": [
+        {
+          "file": "cards/playing-cards/0201.json",
+          "name": "Ace of Hearts"
+        },
+        {
+          "file": "cards/playing-cards/0202.json",
+          "name": "Two of Hearts"
+        },
+        {
+          "file": "cards/playing-cards/0203.json",
+          "name": "Three of Hearts"
+        },
+        {
+          "file": "cards/playing-cards/0204.json",
+          "name": "Four of Hearts"
+        },
+        {
+          "file": "cards/playing-cards/0205.json",
+          "name": "Five of Hearts"
+        },
+        {
+          "file": "cards/playing-cards/0206.json",
+          "name": "Six of Hearts"
+        },
+        {
+          "file": "cards/playing-cards/0207.json",
+          "name": "Seven of Hearts"
+        },
+        {
+          "file": "cards/playing-cards/0208.json",
+          "name": "Eight of Hearts"
+        },
+        {
+          "file": "cards/playing-cards/0209.json",
+          "name": "Nine of Hearts"
+        },
+        {
+          "file": "cards/playing-cards/0210.json",
+          "name": "Ten of Hearts"
+        },
+        {
+          "file": "cards/playing-cards/0211.json",
+          "name": "Jack of Hearts"
+        },
+        {
+          "file": "cards/playing-cards/0212.json",
+          "name": "Queen of Hearts"
+        },
+        {
+          "file": "cards/playing-cards/0213.json",
+          "name": "King of Hearts"
         }
       ]
     }
