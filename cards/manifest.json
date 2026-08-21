@@ -683,6 +683,66 @@
           "name": "King of Hearts"
         }
       ]
+    },
+    {
+      "id": "playingCardsSuit4",
+      "group": "Playing Cards",
+      "label": "Suit 4 (Roses)",
+      "back": "cards/playing-cards/back.json",
+      "cards": [
+        {
+          "file": "cards/playing-cards/0401.json",
+          "name": "Ace of Roses"
+        },
+        {
+          "file": "cards/playing-cards/0402.json",
+          "name": "Two of Roses"
+        },
+        {
+          "file": "cards/playing-cards/0403.json",
+          "name": "Three of Roses"
+        },
+        {
+          "file": "cards/playing-cards/0404.json",
+          "name": "Four of Roses"
+        },
+        {
+          "file": "cards/playing-cards/0405.json",
+          "name": "Five of Roses"
+        },
+        {
+          "file": "cards/playing-cards/0406.json",
+          "name": "Six of Roses"
+        },
+        {
+          "file": "cards/playing-cards/0407.json",
+          "name": "Seven of Roses"
+        },
+        {
+          "file": "cards/playing-cards/0408.json",
+          "name": "Eight of Roses"
+        },
+        {
+          "file": "cards/playing-cards/0409.json",
+          "name": "Nine of Roses"
+        },
+        {
+          "file": "cards/playing-cards/0410.json",
+          "name": "Ten of Roses"
+        },
+        {
+          "file": "cards/playing-cards/0411.json",
+          "name": "Jack of Roses"
+        },
+        {
+          "file": "cards/playing-cards/0412.json",
+          "name": "Queen of Roses"
+        },
+        {
+          "file": "cards/playing-cards/0413.json",
+          "name": "King of Roses"
+        }
+      ]
     }
   ]
 }
