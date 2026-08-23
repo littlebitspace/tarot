@@ -3,7 +3,10 @@ import {
   settings, lastAppliedSettings, setLastAppliedSettings, snapshotDeckSettings,
 } from "./config.js";
 import { decodeFramebuf, buildCardEl, buildSliverEl, makeTextGrid } from "./renderer.js";
-import { table, placedCards, createPlacedCard, positionCardAt, bringToFront, trackPointer, runFlip } from "./card.js";
+import {
+  table, placedCards, createPlacedCard, positionCardAt, trackPointer, prepareForDrag,
+  chainFromRoot, attachChain, restackChain, setOnChainDropped,
+} from "./card.js";
 
 /* =========================================================================
    CARD DATA — loaded from manifest.json + individual per-card files at
@@ -154,34 +157,109 @@ export function shuffleDeck() {
   setLastAppliedSettings(snapshotDeckSettings());
 }
 
-// Draw: card is created directly on top of the deck. If you just click
-// (no movement before release) it flips face-up in place. If you drag it
-// away, it goes with you face-down and does NOT flip.
-function placeNewCardFromDeck(e) {
-  if (deckOrder.length === 0) return;
-  const card = deckOrder.shift();
+// Draw: deals settings.cardsPerDraw cards (or fewer if the deck's running
+// low) directly on top of the deck, chained together face-down in a
+// horizontal fan — the card drawn first ends up on the bottom of the
+// pile, the last one drawn on top, matching how dealing a real packet of
+// cards works. Every draw goes through this same path regardless of N,
+// so a 1-card draw behaves exactly like a bigger one: dealt face-down,
+// left for you to flip yourself with a separate click. Dragging the deck
+// (instead of a plain click) lets you carry the whole freshly dealt pile
+// away in the same gesture.
+const DRAW_FAN_STEP = 3; // exposed columns per non-topmost card in a multi-card deal
 
-  const state = createPlacedCard({
-    card,
-    backGrid: resolveBackGrid(card),
-    reversed: (lastAppliedSettings && lastAppliedSettings.allUpright) ? false : Math.random() < 0.5,
-  });
-  table.appendChild(state.el);
+// Draw: deals settings.cardsPerDraw cards (or fewer if the deck's running
+// low) directly on top of the deck, chained together face-down in a
+// horizontal fan. This is "pick N cards off the top, keeping their order"
+// — not "deal them out" — so the very first card drawn (the one that was
+// on top of the deck) ends up on TOP of the resulting pile too, exactly
+// where you'd expect to find it, with each card drawn after it stacked
+// underneath in turn. Every draw goes through this same path regardless
+// of N, so a 1-card draw behaves exactly like a bigger one: dealt
+// face-down, left for you to flip yourself with a separate click.
+// Dragging the deck (instead of a plain click) lets you carry the whole
+// freshly dealt pile away in the same gesture.
+function placeNewCardFromDeck(e) {
+  const n = Math.min(settings.cardsPerDraw, deckOrder.length);
+  if (n === 0) return;
 
   const tRect = table.getBoundingClientRect();
   const dRect = deckStackEl.getBoundingClientRect();
-  positionCardAt(
-    state,
-    Math.round((dRect.left - tRect.left) / CELL_PX),
-    Math.round((dRect.top - tRect.top) / CELL_PX)
-  );
-  bringToFront(state);
+  const baseCol = Math.round((dRect.left - tRect.left) / CELL_PX);
+  const baseRow = Math.round((dRect.top - tRect.top) / CELL_PX);
+
+  // Draw all N first, in order (states[0] = first drawn = deck's former
+  // top card), before deciding how to chain them.
+  const states = [];
+  for (let i = 0; i < n; i++) {
+    const card = deckOrder.shift();
+    const state = createPlacedCard({
+      card,
+      backGrid: resolveBackGrid(card),
+      reversed: (lastAppliedSettings && lastAppliedSettings.allUpright) ? false : Math.random() < 0.5,
+    });
+    table.appendChild(state.el);
+    // Most-exposed (rightmost, full width) slot goes to the first-drawn
+    // card, matching it ending up on top of the z-stack below — the
+    // topmost card in a real fan is the one covering the others.
+    positionCardAt(state, baseCol + (n - 1 - i) * DRAW_FAN_STEP, baseRow);
+    states.push(state);
+  }
+
+  // Chain bottom-to-top in REVERSE draw order (last-drawn/deepest first,
+  // first-drawn/topmost last), so the final stack has states[0] on top.
+  let bottomState = null;
+  let currentTop = null;
+  for (let i = n - 1; i >= 0; i--) {
+    const state = states[i];
+    if (currentTop) attachChain(currentTop, state);
+    else bottomState = state;
+    currentTop = state;
+  }
+  restackChain(bottomState);
 
   renderDeck();
-  trackPointer(state, e, () => runFlip(state));
+  trackPointer(bottomState, e, { onDragStart: () => prepareForDrag(bottomState), onReleaseWithoutMove: () => {} });
 }
 
 deckStackEl.addEventListener("pointerdown", (e) => {
   e.preventDefault();
   placeNewCardFromDeck(e);
+});
+
+/* =========================================================================
+   RECYCLING — dropping a pile onto the empty deck turns it back into
+   deckOrder. Registered as a hook so card.js's drop handling never has to
+   know decks exist. We can't tell which cards are "the waste pile"
+   specifically (any card could be dropped on the deck), so this only
+   fires when the deck is actually empty, and treats whatever chain got
+   dropped there as the thing to recycle.
+
+   Order: since a waste pile is built by attaching each newly-played card
+   on top of the last, an un-flipped pile has its oldest (first-drawn)
+   card on the bottom and newest on top — so reading it bottom-to-top
+   reproduces the original draw order. A pile the player has manually
+   flipped face-down has already had that order reversed once by the flip
+   itself, so reading it top-to-bottom reproduces it instead. Since a pile
+   can mix face-up and face-down cards, majority face state decides which
+   reading to use.
+   ========================================================================= */
+setOnChainDropped((chain) => {
+  if (deckOrder.length !== 0) return false;
+
+  const dRect = deckStackEl.getBoundingClientRect();
+  const overlapsDeck = chain.some(s => {
+    const cr = s.el.getBoundingClientRect();
+    return !(cr.right < dRect.left || cr.left > dRect.right || cr.bottom < dRect.top || cr.top > dRect.bottom);
+  });
+  if (!overlapsDeck) return false;
+
+  const faceUpCount = chain.filter(s => s.faceUp).length;
+  const majorityFaceUp = faceUpCount * 2 > chain.length;
+  const chronological = majorityFaceUp ? chain : chain.slice().reverse();
+
+  deckOrder = chronological.map(s => s.card);
+  chain.forEach(s => { placedCards.delete(s.instId); s.el.remove(); });
+  renderDeck();
+  return true;
 });

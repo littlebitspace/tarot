@@ -71,6 +71,9 @@ function showTip(state) {
   state.tipEl.style.display = settings.showInterpretations ? "block" : "none";
 }
 
+// Flips a single card's own face — the animation and state toggle only.
+// Says nothing about piles; flipChainFrom() below is what a click actually
+// triggers, and calls this once per card in the affected chain.
 export function runFlip(state) {
   state.animating = true;
   state.tipEl.innerHTML = "";
@@ -95,11 +98,145 @@ export function runFlip(state) {
   tick();
 }
 
+/* =========================================================================
+   PILES (CHAINS) — a pile is a simple doubly-linked list, never a tree:
+   state.below points to the card this one is stacked on; state.above
+   points to the card stacked on top of it. Walking .above from any card
+   gives "that card and everything stacked above it" — which is exactly
+   the unit that moves together on drag, and the unit a click flips.
+
+   Flipping a chain means physically turning that whole sub-packet over:
+   each card's own face toggles independently (so a pile can hold a mix
+   of face-up and face-down cards), AND the stacking order reverses —
+   what was on top of the sub-packet ends up on the bottom of it. That's
+   why clicking the bottom card of a pile flips the entire pile (nothing
+   below it to leave behind), while clicking a card in the middle only
+   flips it and whatever sits above it, leaving what's underneath alone.
+   ========================================================================= */
+
+// [state, state.above, state.above.above, ...] — bottom to top.
+export function chainFromRoot(state) {
+  const chain = [];
+  let cur = state;
+  while (cur) { chain.push(cur); cur = cur.above; }
+  return chain;
+}
+
+export function chainBottom(state) {
+  let cur = state;
+  while (cur.below) cur = cur.below;
+  return cur;
+}
+
+// Renumbers z-index bottom-to-top for the WHOLE pile containing this card
+// (not just the sub-chain above it), bringing it to the front as a group
+// while preserving its internal stacking order.
+export function restackChain(anyState) {
+  const chain = chainFromRoot(chainBottom(anyState));
+  chain.forEach(s => {
+    s.z = ++zCounter;
+    s.el.style.zIndex = s.z;
+  });
+}
+
+function detachFromBelow(state) {
+  if (state.below) {
+    state.below.above = null;
+    state.below = null;
+  }
+}
+
+// Detaches `state` from whatever it's resting on and brings its whole
+// (now free-standing) sub-chain to the front. Called as trackPointer's
+// onDragStart — i.e. only once an actual drag is confirmed, never on a
+// plain click — so exported for deck.js's own trackPointer call too.
+export function prepareForDrag(state) {
+  detachFromBelow(state);
+  chainFromRoot(state).forEach(s => bringToFront(s));
+}
+
+// Attaches upperBottom (and everything above it) on top of lowerTop's
+// pile. lowerTop must currently be the top of its own pile.
+export function attachChain(lowerTop, upperBottom) {
+  lowerTop.above = upperBottom;
+  upperBottom.below = lowerTop;
+  restackChain(lowerTop);
+}
+
+// Moves every card from `root` upward by the same (col, row) delta —
+// relative offsets within the pile are preserved exactly, wonky fans stay
+// wonky. Used both for live drag movement and (indirectly, via
+// positionCardAt) for jumping a pile to a new spot. Each member is
+// clamped to the table bounds independently (positionCardAt, defined
+// below — hoisted, so this forward reference is fine), so a pile dragged
+// near the table edge compresses its wonky fan rather than pushing
+// non-grabbed cards off the visible table entirely.
+function moveChainBy(root, deltaCol, deltaRow) {
+  chainFromRoot(root).forEach(s => positionCardAt(s, s.col + deltaCol, s.row + deltaRow));
+}
+
+// Flips the sub-chain from `root` upward: toggles each card's own face,
+// then reverses that sub-chain's internal stacking order and re-splices
+// the new bottom onto whatever `root` was originally sitting on (if
+// anything) — see the file-level comment above for why.
+export function flipChainFrom(root) {
+  const chain = chainFromRoot(root); // bottom..top of the sub-chain being flipped
+  const belowAnchor = root.below; // stays fixed underneath; null if root was already a pile's own root
+
+  chain.forEach(s => runFlip(s));
+
+  const reversed = chain.slice().reverse(); // reversed[0] = new bottom, was old top
+  reversed.forEach((s, i) => {
+    s.below = reversed[i - 1] || null;
+    s.above = reversed[i + 1] || null;
+  });
+  reversed[0].below = belowAnchor;
+  if (belowAnchor) belowAnchor.above = reversed[0];
+
+  restackChain(belowAnchor || reversed[0]);
+}
+
 function onCardClick(instId) {
   const state = placedCards.get(instId);
-  if (!state || state.animating) return;
-  runFlip(state);
+  if (!state) return;
+  if (chainFromRoot(state).some(s => s.animating)) return; // a flip is already mid-animation somewhere in this sub-chain
+  flipChainFrom(state);
 }
+
+// Looks for another pile's top card overlapping `state`'s current
+// position and, if attachOnDrop is on, attaches state's chain onto it.
+// Never attaches to a card already in the same pile.
+function tryAttach(state) {
+  if (!settings.attachOnDrop) return;
+  const ownChain = chainFromRoot(chainBottom(state));
+  const r = state.el.getBoundingClientRect();
+  for (const other of placedCards.values()) {
+    if (ownChain.includes(other)) continue;
+    if (other.above) continue; // only attach onto a pile's current top card
+    const or = other.el.getBoundingClientRect();
+    // Strict inequality: two rects that merely touch at an edge (share a
+    // boundary with zero-area intersection) do NOT count as overlapping —
+    // only genuine, positive-area overlap does. Adjacent, non-overlapping
+    // cards should never attach just because they happen to be neighbors.
+    const overlap = !(r.right <= or.left || r.left >= or.right || r.bottom <= or.top || r.top >= or.bottom);
+    if (overlap) { attachChain(other, state); return; }
+  }
+}
+
+// deck.js registers itself here so card.js never has to import deck-level
+// concepts (deckOrder, the deck's own DOM) to support recycling. Returns
+// true if it consumed the drop (did a recycle) — card.js only tries a
+// normal pile attach if this returns falsy or nothing is registered.
+let onChainDroppedHandler = null;
+export function setOnChainDropped(fn) { onChainDroppedHandler = fn; }
+
+// A higher-level module (persistence.js) can register here to be notified
+// after any completed interaction — click-to-flip, drag-to-move, attach,
+// or recycle — so it knows when to save. Deliberately generic (no args)
+// so card.js never has to know or care what "save" even means.
+let onStateChangedHandler = null;
+export function setOnStateChanged(fn) { onStateChangedHandler = fn; }
+function notifyStateChanged() { if (onStateChangedHandler) onStateChangedHandler(); }
 
 /* =========================================================================
    PLACED CARD LIFECYCLE — creation, positioning, dragging. Positions are
@@ -122,6 +259,7 @@ function applyCardPosition(state) {
 // Sets a card's position from grid-cell coordinates, clamped to stay
 // within the table. Used both for drag moves and for initial placement
 // (e.g. deck.js positioning a freshly drawn card on top of the pile).
+// Only moves this one card — see moveChainBy for moving a whole pile.
 export function positionCardAt(state, col, row) {
   const r = table.getBoundingClientRect();
   const maxCol = Math.max(0, Math.floor((r.width - CARD_PX_W) / CELL_PX));
@@ -131,13 +269,11 @@ export function positionCardAt(state, col, row) {
   applyCardPosition(state);
 }
 
-function setCardPositionFromPointer(state, clientX, clientY, offsetX, offsetY) {
+function setCardPositionFromPointer(root, clientX, clientY, offsetX, offsetY) {
   const r = table.getBoundingClientRect();
-  positionCardAt(
-    state,
-    Math.round((clientX - r.left - offsetX) / CELL_PX),
-    Math.round((clientY - r.top - offsetY) / CELL_PX)
-  );
+  const newCol = Math.round((clientX - r.left - offsetX) / CELL_PX);
+  const newRow = Math.round((clientY - r.top - offsetY) / CELL_PX);
+  moveChainBy(root, newCol - root.col, newRow - root.row);
 }
 
 export function bringToFront(state) {
@@ -148,9 +284,15 @@ export function bringToFront(state) {
 // Tracks the pointer after a mousedown/touchdown on a card (existing or
 // freshly dealt off the deck). If the pointer never moves past the
 // threshold before release, onReleaseWithoutMove() runs instead — that's
-// the click-vs-drag split: a plain click flips the card, a drag just
-// carries it.
-export function trackPointer(state, startEvent, onReleaseWithoutMove) {
+// the click-vs-drag split: a plain click flips the card's chain, a drag
+// just carries it (and everything attached above it). onDragStart fires
+// exactly once, the moment movement is first confirmed — NOT on every
+// pointerdown — since anything it does (like detaching from the pile
+// below) must only happen for an actual drag. Detaching eagerly on every
+// pointerdown was the earlier bug: a plain click-to-flip would sever the
+// card from its pile before flipChainFrom ever got a chance to see what
+// was underneath it to re-splice onto.
+export function trackPointer(state, startEvent, { onDragStart, onReleaseWithoutMove }) {
   let moved = false;
   const startX = startEvent.clientX, startY = startEvent.clientY;
   const r = table.getBoundingClientRect();
@@ -159,15 +301,22 @@ export function trackPointer(state, startEvent, onReleaseWithoutMove) {
 
   function onMove(e) {
     if (!moved) {
-      if (Math.abs(e.clientX - startX) > 4 || Math.abs(e.clientY - startY) > 4) moved = true;
-      else return;
+      if (Math.abs(e.clientX - startX) > 4 || Math.abs(e.clientY - startY) > 4) {
+        moved = true;
+        if (onDragStart) onDragStart();
+      } else {
+        return;
+      }
     }
     setCardPositionFromPointer(state, e.clientX, e.clientY, offsetX, offsetY);
   }
   function onUp() {
     document.removeEventListener("pointermove", onMove);
     document.removeEventListener("pointerup", onUp);
-    if (!moved) onReleaseWithoutMove();
+    if (!moved) { onReleaseWithoutMove(); return; }
+    const droppedChain = chainFromRoot(state);
+    const consumed = onChainDroppedHandler ? onChainDroppedHandler(droppedChain) : false;
+    if (!consumed) tryAttach(state);
   }
   document.addEventListener("pointermove", onMove);
   document.addEventListener("pointerup", onUp);
@@ -207,8 +356,10 @@ function buildPlacedCardEl(state) {
 
   wrap.addEventListener("pointerdown", (e) => {
     e.preventDefault();
-    bringToFront(state);
-    trackPointer(state, e, () => onCardClick(state.instId));
+    trackPointer(state, e, {
+      onDragStart: () => prepareForDrag(state),
+      onReleaseWithoutMove: () => onCardClick(state.instId),
+    });
   });
 
   state.cardPreEl = cardPre;
@@ -225,6 +376,7 @@ export function createPlacedCard({ card, backGrid, reversed }) {
   const state = {
     instId, card, backGrid, col: 0, row: 0,
     reversed, faceUp: false, frameIdx: 0, dir: 0, animating: false, z: 0,
+    above: null, below: null,
   };
   buildPlacedCardEl(state);
   placedCards.set(instId, state);

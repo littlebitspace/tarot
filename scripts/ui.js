@@ -46,6 +46,29 @@ function addBlankLine() {
   settingsPanelEl.appendChild(buildCardEl(makeTextGrid([""], "white")));
 }
 
+// "[-] Cards per draw: N [+]" — same boxed-button style as the scale
+// control (buildMiniBtn, defined below; function declarations are
+// hoisted, so the forward reference here is fine).
+function buildCardsPerDrawRow() {
+  const row = document.createElement("div");
+  row.style.display = "flex";
+  row.style.alignItems = "center";
+  row.style.gap = CELL_PX + "px";
+  const minusEl = buildMiniBtn("-", () => {
+    settings.cardsPerDraw = clamp(settings.cardsPerDraw - 1, 1, 10);
+    renderSettingsPanel();
+  });
+  const labelEl = buildCardEl(makeTextGrid([`Cards per draw: ${settings.cardsPerDraw}`], "white"));
+  const plusEl = buildMiniBtn("+", () => {
+    settings.cardsPerDraw = clamp(settings.cardsPerDraw + 1, 1, 10);
+    renderSettingsPanel();
+  });
+  row.appendChild(minusEl);
+  row.appendChild(labelEl);
+  row.appendChild(plusEl);
+  settingsPanelEl.appendChild(row);
+}
+
 function renderSettingsPanel() {
   settingsPanelEl.innerHTML = "";
   addSettingsLine(makeTextGrid(["Cards in the deck"], "white"));
@@ -83,6 +106,15 @@ function renderSettingsPanel() {
   addBlankLine();
 
   addSettingsLine(makeTextGrid(["-".repeat(20)], "grayDark"));
+  addBlankLine();
+
+  addSettingsLine(makeTextGrid([`[${settings.attachOnDrop ? "x" : " "}] Attach cards on drop`], "white"), () => {
+    settings.attachOnDrop = !settings.attachOnDrop;
+    renderSettingsPanel();
+  });
+  addBlankLine();
+
+  buildCardsPerDrawRow();
   addBlankLine();
 
   addSettingsLine(makeTextGrid([`[${settings.showInterpretations ? "x" : " "}] Show Interpretations`], "white"), () => {

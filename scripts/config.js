@@ -46,6 +46,8 @@ export const settings = {
   sameBack: false,
   allUpright: false,
   showInterpretations: true,
+  attachOnDrop: true, // dropping a card onto another card's pile attaches them into a chain
+  cardsPerDraw: 1, // how many cards a single draw deals, chained together face-down
 };
 
 // The {enabledSets, sameBack, allUpright} actually baked into the current
