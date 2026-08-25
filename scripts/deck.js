@@ -96,6 +96,19 @@ export function resolveBackGrid(card) {
   return card.set.backGrid;
 }
 
+// card.file is unique across the whole manifest (it's a literal path), so
+// it's what persistence.js uses as a card's stable identity across a
+// reload — CARD_SETS itself is rebuilt fresh from the manifest every page
+// load, so saved deckOrder/placed-card records can't hold direct object
+// references, only this string to look the real object back up with.
+export function findCardByFile(file) {
+  for (const set of CARD_SETS) {
+    const card = set.cards.find(c => c.file === file);
+    if (card) return card;
+  }
+  return null;
+}
+
 function buildDeckFromSettings() {
   const list = [];
   for (const set of CARD_SETS) {
@@ -117,6 +130,9 @@ let deckOrder = []; // populated once the manifest finishes loading and init() r
 const deckStackEl = document.getElementById("deckStack");
 const deckCountEl = document.getElementById("deckCount");
 const MAX_LAYERS = 3;
+
+export function getDeckOrder() { return deckOrder; }
+export function setDeckOrder(cards) { deckOrder = cards; }
 
 export function renderDeck() {
   deckStackEl.innerHTML = "";
@@ -157,15 +173,6 @@ export function shuffleDeck() {
   setLastAppliedSettings(snapshotDeckSettings());
 }
 
-// Draw: deals settings.cardsPerDraw cards (or fewer if the deck's running
-// low) directly on top of the deck, chained together face-down in a
-// horizontal fan — the card drawn first ends up on the bottom of the
-// pile, the last one drawn on top, matching how dealing a real packet of
-// cards works. Every draw goes through this same path regardless of N,
-// so a 1-card draw behaves exactly like a bigger one: dealt face-down,
-// left for you to flip yourself with a separate click. Dragging the deck
-// (instead of a plain click) lets you carry the whole freshly dealt pile
-// away in the same gesture.
 const DRAW_FAN_STEP = 3; // exposed columns per non-topmost card in a multi-card deal
 
 // Draw: deals settings.cardsPerDraw cards (or fewer if the deck's running
@@ -250,7 +257,7 @@ setOnChainDropped((chain) => {
   const dRect = deckStackEl.getBoundingClientRect();
   const overlapsDeck = chain.some(s => {
     const cr = s.el.getBoundingClientRect();
-    return !(cr.right < dRect.left || cr.left > dRect.right || cr.bottom < dRect.top || cr.top > dRect.bottom);
+    return !(cr.right <= dRect.left || cr.left >= dRect.right || cr.bottom <= dRect.top || cr.top >= dRect.bottom);
   });
   if (!overlapsDeck) return false;
 

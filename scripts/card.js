@@ -93,6 +93,7 @@ export function runFlip(state) {
       state.dir = forward ? 1 : 0;
       state.faceUp = forward;
       if (state.faceUp) showTip(state);
+      notifyStateChanged();
     }
   }
   tick();
@@ -313,10 +314,11 @@ export function trackPointer(state, startEvent, { onDragStart, onReleaseWithoutM
   function onUp() {
     document.removeEventListener("pointermove", onMove);
     document.removeEventListener("pointerup", onUp);
-    if (!moved) { onReleaseWithoutMove(); return; }
+    if (!moved) { onReleaseWithoutMove(); notifyStateChanged(); return; }
     const droppedChain = chainFromRoot(state);
     const consumed = onChainDroppedHandler ? onChainDroppedHandler(droppedChain) : false;
     if (!consumed) tryAttach(state);
+    notifyStateChanged();
   }
   document.addEventListener("pointermove", onMove);
   document.addEventListener("pointerup", onUp);
@@ -341,7 +343,7 @@ function buildPlacedCardEl(state) {
   visual.className = "card-visual";
   if (state.reversed) visual.style.transform = "rotate(180deg)";
 
-  const cardPre = buildCardEl(state.backGrid);
+  const cardPre = buildCardEl(state.faceUp ? state.card.grid : state.backGrid);
   visual.appendChild(cardPre);
   wrap.appendChild(visual);
 
@@ -365,17 +367,23 @@ function buildPlacedCardEl(state) {
   state.cardPreEl = cardPre;
   state.tipEl = tip;
   state.el = wrap;
+  if (state.faceUp) showTip(state); // matches the front already rendered above
 }
 
-// Creates a new placed-card instance for a given deck card, builds its DOM
-// (not yet attached to the table — caller does that), and registers it in
-// placedCards. Caller is responsible for positioning it (positionCardAt)
-// and appending state.el to the table.
-export function createPlacedCard({ card, backGrid, reversed }) {
+// Creates a new placed-card instance, builds its DOM (not yet attached to
+// the table — caller does that), and registers it in placedCards. Caller
+// is responsible for positioning it (positionCardAt) and appending
+// state.el to the table.
+//
+// faceUp/dir/frameIdx default to a fresh face-down card (the normal deal
+// path). persistence.js's restore path passes them explicitly to recreate
+// a card in its exact saved state, rendered directly with no flip
+// animation — see buildPlacedCardEl above.
+export function createPlacedCard({ card, backGrid, reversed, faceUp = false, dir = faceUp ? 1 : 0 }) {
   const instId = "c" + (++instanceCounter);
   const state = {
     instId, card, backGrid, col: 0, row: 0,
-    reversed, faceUp: false, frameIdx: 0, dir: 0, animating: false, z: 0,
+    reversed, faceUp, frameIdx: faceUp ? 11 : 0, dir, animating: false, z: 0,
     above: null, below: null,
   };
   buildPlacedCardEl(state);

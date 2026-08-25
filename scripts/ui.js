@@ -1,7 +1,15 @@
 import { SCALE, CELL_PX, setScale, settings, lastAppliedSettings, snapshotDeckSettings, deckSettingsMatch } from "./config.js";
 import { makeTextGrid, wrapText, buildCardEl } from "./renderer.js";
-import { placedCards, clamp, refreshCardSize } from "./card.js";
+import { placedCards, clamp, refreshCardSize, setOnStateChanged } from "./card.js";
 import { CARD_SETS, loadManifest, renderDeck, shuffleDeck } from "./deck.js";
+import { saveState, loadState } from "./persistence.js";
+
+// Card-level interactions (click-to-flip, drag/attach, recycle) notify
+// through this hook rather than ui.js having to be threaded into every
+// mutation site in card.js/deck.js — see card.js's setOnStateChanged.
+// Settings-panel and scale changes call saveState() directly below,
+// since those never touch card.js's drag/flip machinery at all.
+setOnStateChanged(saveState);
 
 const table = document.getElementById("table");
 const deckCountEl = document.getElementById("deckCount");
@@ -129,6 +137,8 @@ function renderSettingsPanel() {
   if (lastAppliedSettings && !deckSettingsMatch(snapshotDeckSettings(), lastAppliedSettings)) {
     addSettingsLine(makeTextGrid(["Shuffle to apply deck changes"], "yellow"));
   }
+
+  saveState();
 }
 
 /* =========================================================================
@@ -173,24 +183,31 @@ function layoutChrome() {
   settingsPanelEl.style.marginTop = CELL_PX + "px";
 }
 
-function applyScale(newScale) {
-  newScale = clamp(newScale, 1, 4);
-  if (newScale === SCALE) return;
-  setScale(newScale);
-
+// Re-applies everything that depends on the current CELL_PX — called both
+// when the user actually changes scale (applyScale below) and once after
+// a restore, since loadState() may have changed SCALE before any of this
+// UI existed to react to it (module load runs synchronously, before
+// init()'s async restore ever executes).
+function refreshForScale() {
   table.style.backgroundSize = CELL_PX + "px " + CELL_PX + "px";
-
   // Every already-built card-pre just needs its font resized — the RLE
   // span content underneath doesn't change with scale.
   document.querySelectorAll(".card-pre").forEach(pre => {
     pre.style.fontSize = CELL_PX + "px";
     pre.style.lineHeight = CELL_PX + "px";
   });
-
   placedCards.forEach(refreshCardSize);
   renderDeck();
   renderScaleControl();
   layoutChrome();
+}
+
+function applyScale(newScale) {
+  newScale = clamp(newScale, 1, 4);
+  if (newScale === SCALE) return;
+  setScale(newScale);
+  refreshForScale();
+  saveState();
 }
 
 table.style.backgroundSize = CELL_PX + "px " + CELL_PX + "px";
@@ -219,14 +236,17 @@ async function init() {
     errors = [e.message];
   }
 
-  // Default selection: the two real tarot sets, matching the original mock.
-  // If your manifest uses different set ids, this just ends up empty —
-  // check the ids in your manifest against these two strings.
-  settings.enabledSets = new Set(
-    CARD_SETS.filter(s => s.id === "tarotMajor" || s.id === "tarotMinor").map(s => s.id)
-  );
-  shuffleDeck(); // builds deckOrder fresh + records lastAppliedSettings; nothing on the table yet to clear
-  renderDeck();
+  const restored = loadState();
+  if (!restored) {
+    // Default selection: the two real tarot sets, matching the original
+    // mock. If your manifest uses different set ids, this just ends up
+    // empty — check the ids in your manifest against these two strings.
+    settings.enabledSets = new Set(
+      CARD_SETS.filter(s => s.id === "tarotMajor" || s.id === "tarotMinor").map(s => s.id)
+    );
+    shuffleDeck(); // builds deckOrder fresh + records lastAppliedSettings; nothing on the table yet to clear
+  }
+  refreshForScale(); // includes renderDeck(); also picks up a restored SCALE, since module-level rendering above ran before this async restore did
   renderSettingsPanel();
   renderLoadErrors(errors);
 }
