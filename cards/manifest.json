@@ -565,182 +565,246 @@
       ]
     },
     {
-      "id": "playingCardsSuit1",
+      "id": "playingCardsPips",
       "group": "Playing Cards",
-      "label": "Suit 1 (Skulls)",
+      "label": "Pip Cards",
       "back": "cards/playing-cards/back.json",
       "cards": [
         {
           "file": "cards/playing-cards/0101.json",
-          "name": "Ace of Skulls"
-        },
-        {
-          "file": "cards/playing-cards/0102.json",
-          "name": "Two of Skulls"
-        },
-        {
-          "file": "cards/playing-cards/0103.json",
-          "name": "Three of Skulls"
-        },
-        {
-          "file": "cards/playing-cards/0104.json",
-          "name": "Four of Skulls"
-        },
-        {
-          "file": "cards/playing-cards/0105.json",
-          "name": "Five of Skulls"
-        },
-        {
-          "file": "cards/playing-cards/0106.json",
-          "name": "Six of Skulls"
-        },
-        {
-          "file": "cards/playing-cards/0107.json",
-          "name": "Seven of Skulls"
-        },
-        {
-          "file": "cards/playing-cards/0108.json",
-          "name": "Eight of Skulls"
-        },
-        {
-          "file": "cards/playing-cards/0109.json",
-          "name": "Nine of Skulls"
-        },
-        {
-          "file": "cards/playing-cards/0110.json",
-          "name": "Ten of Skulls"
-        },
-        {
-          "file": "cards/playing-cards/0111.json",
-          "name": "Jack of Skulls"
-        },
-        {
-          "file": "cards/playing-cards/0112.json",
-          "name": "Queen of Skulls"
-        },
-        {
-          "file": "cards/playing-cards/0113.json",
-          "name": "King of Skulls"
-        }
-      ]
-    },
-    {
-      "id": "playingCardsSuit2",
-      "group": "Playing Cards",
-      "label": "Suit 2 (Hearts)",
-      "back": "cards/playing-cards/back.json",
-      "cards": [
-        {
-          "file": "cards/playing-cards/0201.json",
-          "name": "Ace of Hearts"
-        },
-        {
-          "file": "cards/playing-cards/0202.json",
-          "name": "Two of Hearts"
-        },
-        {
-          "file": "cards/playing-cards/0203.json",
-          "name": "Three of Hearts"
-        },
-        {
-          "file": "cards/playing-cards/0204.json",
-          "name": "Four of Hearts"
-        },
-        {
-          "file": "cards/playing-cards/0205.json",
-          "name": "Five of Hearts"
-        },
-        {
-          "file": "cards/playing-cards/0206.json",
-          "name": "Six of Hearts"
-        },
-        {
-          "file": "cards/playing-cards/0207.json",
-          "name": "Seven of Hearts"
-        },
-        {
-          "file": "cards/playing-cards/0208.json",
-          "name": "Eight of Hearts"
-        },
-        {
-          "file": "cards/playing-cards/0209.json",
-          "name": "Nine of Hearts"
-        },
-        {
-          "file": "cards/playing-cards/0210.json",
-          "name": "Ten of Hearts"
-        },
-        {
-          "file": "cards/playing-cards/0211.json",
-          "name": "Jack of Hearts"
-        },
-        {
-          "file": "cards/playing-cards/0212.json",
-          "name": "Queen of Hearts"
-        },
-        {
-          "file": "cards/playing-cards/0213.json",
-          "name": "King of Hearts"
-        }
-      ]
-    },
-    {
-      "id": "playingCardsSuit4",
-      "group": "Playing Cards",
-      "label": "Suit 4 (Roses)",
-      "back": "cards/playing-cards/back.json",
-      "cards": [
-        {
-          "file": "cards/playing-cards/0401.json",
           "name": "Ace of Roses"
         },
         {
-          "file": "cards/playing-cards/0402.json",
+          "file": "cards/playing-cards/0102.json",
           "name": "Two of Roses"
         },
         {
-          "file": "cards/playing-cards/0403.json",
+          "file": "cards/playing-cards/0103.json",
           "name": "Three of Roses"
         },
         {
-          "file": "cards/playing-cards/0404.json",
+          "file": "cards/playing-cards/0104.json",
           "name": "Four of Roses"
         },
         {
-          "file": "cards/playing-cards/0405.json",
+          "file": "cards/playing-cards/0105.json",
           "name": "Five of Roses"
         },
         {
-          "file": "cards/playing-cards/0406.json",
+          "file": "cards/playing-cards/0106.json",
           "name": "Six of Roses"
         },
         {
-          "file": "cards/playing-cards/0407.json",
+          "file": "cards/playing-cards/0107.json",
           "name": "Seven of Roses"
         },
         {
-          "file": "cards/playing-cards/0408.json",
+          "file": "cards/playing-cards/0108.json",
           "name": "Eight of Roses"
         },
         {
-          "file": "cards/playing-cards/0409.json",
+          "file": "cards/playing-cards/0109.json",
           "name": "Nine of Roses"
         },
         {
-          "file": "cards/playing-cards/0410.json",
+          "file": "cards/playing-cards/0110.json",
           "name": "Ten of Roses"
         },
         {
-          "file": "cards/playing-cards/0411.json",
+          "file": "cards/playing-cards/0201.json",
+          "name": "Ace of Skulls"
+        },
+        {
+          "file": "cards/playing-cards/0202.json",
+          "name": "Two of Skulls"
+        },
+        {
+          "file": "cards/playing-cards/0203.json",
+          "name": "Three of Skulls"
+        },
+        {
+          "file": "cards/playing-cards/0204.json",
+          "name": "Four of Skulls"
+        },
+        {
+          "file": "cards/playing-cards/0205.json",
+          "name": "Five of Skulls"
+        },
+        {
+          "file": "cards/playing-cards/0206.json",
+          "name": "Six of Skulls"
+        },
+        {
+          "file": "cards/playing-cards/0207.json",
+          "name": "Seven of Skulls"
+        },
+        {
+          "file": "cards/playing-cards/0208.json",
+          "name": "Eight of Skulls"
+        },
+        {
+          "file": "cards/playing-cards/0209.json",
+          "name": "Nine of Skulls"
+        },
+        {
+          "file": "cards/playing-cards/0210.json",
+          "name": "Ten of Skulls"
+        },
+        {
+          "file": "cards/playing-cards/0301.json",
+          "name": "Ace of Hearts"
+        },
+        {
+          "file": "cards/playing-cards/0302.json",
+          "name": "Two of Hearts"
+        },
+        {
+          "file": "cards/playing-cards/0303.json",
+          "name": "Three of Hearts"
+        },
+        {
+          "file": "cards/playing-cards/0304.json",
+          "name": "Four of Hearts"
+        },
+        {
+          "file": "cards/playing-cards/0305.json",
+          "name": "Five of Hearts"
+        },
+        {
+          "file": "cards/playing-cards/0306.json",
+          "name": "Six of Hearts"
+        },
+        {
+          "file": "cards/playing-cards/0307.json",
+          "name": "Seven of Hearts"
+        },
+        {
+          "file": "cards/playing-cards/0308.json",
+          "name": "Eight of Hearts"
+        },
+        {
+          "file": "cards/playing-cards/0309.json",
+          "name": "Nine of Hearts"
+        },
+        {
+          "file": "cards/playing-cards/0310.json",
+          "name": "Ten of Hearts"
+        },
+        {
+          "file": "cards/playing-cards/0401.json",
+          "name": "Ace of Bones"
+        },
+        {
+          "file": "cards/playing-cards/0402.json",
+          "name": "Two of Bones"
+        },
+        {
+          "file": "cards/playing-cards/0403.json",
+          "name": "Three of Bones"
+        },
+        {
+          "file": "cards/playing-cards/0404.json",
+          "name": "Four of Bones"
+        },
+        {
+          "file": "cards/playing-cards/0405.json",
+          "name": "Five of Bones"
+        },
+        {
+          "file": "cards/playing-cards/0406.json",
+          "name": "Six of Bones"
+        },
+        {
+          "file": "cards/playing-cards/0407.json",
+          "name": "Seven of Bones"
+        },
+        {
+          "file": "cards/playing-cards/0408.json",
+          "name": "Eight of Bones"
+        },
+        {
+          "file": "cards/playing-cards/0409.json",
+          "name": "Nine of Bones"
+        },
+        {
+          "file": "cards/playing-cards/0410.json",
+          "name": "Ten of Bones"
+        }
+      ]
+    },
+    {
+      "id": "playingCardsCourt",
+      "group": "Playing Cards",
+      "label": "Court Cards",
+      "back": "cards/playing-cards/back.json",
+      "cards": [
+        {
+          "file": "cards/playing-cards/0111.json",
           "name": "Jack of Roses"
         },
         {
-          "file": "cards/playing-cards/0412.json",
+          "file": "cards/playing-cards/0112.json",
           "name": "Queen of Roses"
         },
         {
-          "file": "cards/playing-cards/0413.json",
+          "file": "cards/playing-cards/0113.json",
           "name": "King of Roses"
+        },
+        {
+          "file": "cards/playing-cards/0211.json",
+          "name": "Jack of Skulls"
+        },
+        {
+          "file": "cards/playing-cards/0212.json",
+          "name": "Queen of Skulls"
+        },
+        {
+          "file": "cards/playing-cards/0213.json",
+          "name": "King of Skulls"
+        },
+        {
+          "file": "cards/playing-cards/0311.json",
+          "name": "Jack of Hearts"
+        },
+        {
+          "file": "cards/playing-cards/0312.json",
+          "name": "Queen of Hearts"
+        },
+        {
+          "file": "cards/playing-cards/0313.json",
+          "name": "King of Hearts"
+        },
+        {
+          "file": "cards/playing-cards/0411.json",
+          "name": "Jack of Bones"
+        },
+        {
+          "file": "cards/playing-cards/0412.json",
+          "name": "Queen of Bones"
+        },
+        {
+          "file": "cards/playing-cards/0413.json",
+          "name": "King of Bones"
+        }
+      ]
+    },
+    {
+      "id": "playingCardsJokers",
+      "group": "Playing Cards",
+      "label": "Jokers",
+      "back": "cards/playing-cards/back.json",
+      "cards": [
+        {
+          "file": "cards/playing-cards/0001.json",
+          "name": "Joker 1"
+        },
+        {
+          "file": "cards/playing-cards/0002.json",
+          "name": "Joker 2"
+        },
+        {
+          "file": "cards/playing-cards/0003.json",
+          "name": "Joker 3"
         }
       ]
     }

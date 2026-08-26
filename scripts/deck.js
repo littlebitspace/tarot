@@ -161,6 +161,57 @@ export function renderDeck() {
   deckCountEl.appendChild(buildCardEl(countGrid));
 }
 
+// The 8 compass directions in rotational order — each step turns the
+// stack's "lean" 45°, tracing a full circle over one 8-frame loop. (1,1)
+// is exactly the resting deck's own diagonal lean (renderDeck above), so
+// looping back to it and then calling the real renderDeck() afterward is
+// seamless. deckStackEl's own box size is left untouched here (matching
+// the resting frame) — offsets that swing left/up render outside that
+// box, which is fine, CSS doesn't clip by default; only sibling layout
+// matters, and that's driven by the unchanged box size, not the content.
+const SPIN_DIRS = [[1, 1], [1, 0], [1, -1], [0, -1], [-1, -1], [-1, 0], [-1, 1], [0, 1]];
+const SPIN_FRAME_MS = 90;
+const SPIN_LOOPS = 3;
+
+let deckAnimating = false;
+
+function renderShuffleFrame(dirIndex) {
+  const [dx, dy] = SPIN_DIRS[dirIndex];
+  deckStackEl.innerHTML = "";
+  const layers = Math.min(MAX_LAYERS, deckOrder.length);
+  for (let k = layers - 1; k >= 0; k--) {
+    const backGrid = resolveBackGrid(deckOrder[k]);
+    const el = k === 0 ? buildCardEl(backGrid) : buildSliverEl(backGrid, dx, dy);
+    el.style.position = "absolute";
+    el.style.left = (k * dx * CELL_PX) + "px";
+    el.style.top = (k * dy * CELL_PX) + "px";
+    el.style.zIndex = String(10 - k);
+    deckStackEl.appendChild(el);
+  }
+}
+
+// Resolves once the jostle finishes. The deck can't be drawn from while
+// this is running — see the pointerdown guard below.
+export function playShuffleAnimation() {
+  return new Promise((resolve) => {
+    if (deckOrder.length === 0) { resolve(); return; }
+    deckAnimating = true;
+    const totalFrames = SPIN_DIRS.length * SPIN_LOOPS;
+    let i = 0;
+    function tick() {
+      renderShuffleFrame(i % SPIN_DIRS.length);
+      i++;
+      if (i < totalFrames) {
+        setTimeout(tick, SPIN_FRAME_MS);
+      } else {
+        deckAnimating = false;
+        resolve();
+      }
+    }
+    tick();
+  });
+}
+
 // Pure data change: rebuilds deckOrder from current settings, clears the
 // table, and records what was actually applied. Does NOT re-render —
 // callers (Shuffle button handler, init()) call renderDeck() themselves,
@@ -231,6 +282,7 @@ function placeNewCardFromDeck(e) {
 
 deckStackEl.addEventListener("pointerdown", (e) => {
   e.preventDefault();
+  if (deckAnimating) return;
   placeNewCardFromDeck(e);
 });
 

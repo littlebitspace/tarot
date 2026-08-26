@@ -1,7 +1,7 @@
 import { SCALE, CELL_PX, setScale, settings, lastAppliedSettings, snapshotDeckSettings, deckSettingsMatch } from "./config.js";
 import { makeTextGrid, wrapText, buildCardEl } from "./renderer.js";
 import { placedCards, clamp, refreshCardSize, setOnStateChanged } from "./card.js";
-import { CARD_SETS, loadManifest, renderDeck, shuffleDeck } from "./deck.js";
+import { CARD_SETS, loadManifest, renderDeck, shuffleDeck, playShuffleAnimation } from "./deck.js";
 import { saveState, loadState } from "./persistence.js";
 
 // Card-level interactions (click-to-flip, drag/attach, recycle) notify
@@ -31,10 +31,17 @@ function renderShuffleBtn() {
   shuffleBtnEl.appendChild(buildCardEl(grid));
 }
 
-shuffleBtnEl.addEventListener("click", () => {
+let shuffleBusy = false;
+shuffleBtnEl.addEventListener("click", async () => {
+  if (shuffleBusy) return;
+  shuffleBusy = true;
+  shuffleBtnEl.style.opacity = "0.6";
+  await playShuffleAnimation();
   shuffleDeck();
   renderDeck();
   renderSettingsPanel();
+  shuffleBtnEl.style.opacity = "1";
+  shuffleBusy = false;
 });
 
 /* =========================================================================

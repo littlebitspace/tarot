@@ -152,30 +152,45 @@ export function updateCardEl(pre, grid) {
 // LAST ROW and LAST COLUMN of that grid — the only part of a stacked-behind
 // card that's ever visible once layers are offset by exactly one cell.
 // Nothing is ever rendered fully underneath something else.
-export function buildSliverEl(grid) {
+// A sliver is a positioning box the size of a full card, holding only the
+// edge(s) of that grid actually exposed when a layer sitting at (dx,dy)
+// cells away is drawn on top of it — the only part of a stacked-behind
+// card that's ever visible. dx/dy are each -1, 0, or 1: a nonzero dx
+// exposes the far column in that direction (right edge if dx>0, left
+// edge if dx<0), a nonzero dy exposes the far row the same way; both
+// nonzero exposes the L-shaped corner where they meet (the original,
+// and still default, case — a card offset down-right, as in the resting
+// deck stack). Nothing is ever rendered fully underneath something else.
+export function buildSliverEl(grid, dx = 1, dy = 1) {
   const wrap = document.createElement("div");
   wrap.style.position = "relative";
   wrap.style.width = (grid.width * CELL_PX) + "px";
   wrap.style.height = (grid.height * CELL_PX) + "px";
 
-  const rowGrid = {
-    width: grid.width, height: 1, bg: grid.bg,
-    cells: grid.cells.slice((grid.height - 1) * grid.width, grid.height * grid.width),
-  };
-  const rowEl = buildCardEl(rowGrid);
-  rowEl.style.position = "absolute";
-  rowEl.style.left = "0px";
-  rowEl.style.top = ((grid.height - 1) * CELL_PX) + "px";
-  wrap.appendChild(rowEl);
+  if (dy !== 0) {
+    const rowIndex = dy > 0 ? grid.height - 1 : 0;
+    const rowGrid = {
+      width: grid.width, height: 1, bg: grid.bg,
+      cells: grid.cells.slice(rowIndex * grid.width, (rowIndex + 1) * grid.width),
+    };
+    const rowEl = buildCardEl(rowGrid);
+    rowEl.style.position = "absolute";
+    rowEl.style.left = "0px";
+    rowEl.style.top = (rowIndex * CELL_PX) + "px";
+    wrap.appendChild(rowEl);
+  }
 
-  const colCells = [];
-  for (let y = 0; y < grid.height; y++) colCells.push(grid.cells[y * grid.width + (grid.width - 1)]);
-  const colGrid = { width: 1, height: grid.height, bg: grid.bg, cells: colCells };
-  const colEl = buildCardEl(colGrid);
-  colEl.style.position = "absolute";
-  colEl.style.left = ((grid.width - 1) * CELL_PX) + "px";
-  colEl.style.top = "0px";
-  wrap.appendChild(colEl);
+  if (dx !== 0) {
+    const colIndex = dx > 0 ? grid.width - 1 : 0;
+    const colCells = [];
+    for (let y = 0; y < grid.height; y++) colCells.push(grid.cells[y * grid.width + colIndex]);
+    const colGrid = { width: 1, height: grid.height, bg: grid.bg, cells: colCells };
+    const colEl = buildCardEl(colGrid);
+    colEl.style.position = "absolute";
+    colEl.style.left = (colIndex * CELL_PX) + "px";
+    colEl.style.top = "0px";
+    wrap.appendChild(colEl);
+  }
 
   return wrap;
 }
