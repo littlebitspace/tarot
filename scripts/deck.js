@@ -161,15 +161,21 @@ export function renderDeck() {
   deckCountEl.appendChild(buildCardEl(countGrid));
 }
 
-// The 8 compass directions in rotational order — each step turns the
-// stack's "lean" 45°, tracing a full circle over one 8-frame loop. (1,1)
-// is exactly the resting deck's own diagonal lean (renderDeck above), so
-// looping back to it and then calling the real renderDeck() afterward is
-// seamless. deckStackEl's own box size is left untouched here (matching
-// the resting frame) — offsets that swing left/up render outside that
-// box, which is fine, CSS doesn't clip by default; only sibling layout
-// matters, and that's driven by the unchanged box size, not the content.
-const SPIN_DIRS = [[1, 1], [1, 0], [1, -1], [0, -1], [-1, -1], [-1, 0], [-1, 1], [0, 1]];
+// The 8 compass directions in the exact rotational order from the spec —
+// each step turns the stack's "lean" 45°, tracing a full circle over one
+// 8-frame loop. The MIDDLE layer (k=1) is the fixed pivot; front (k=0)
+// and back (k=2) orbit it in opposite phase, one step apart on either
+// side — that's what makes the front card actually move instead of
+// sitting still while only the back peeks around it. (1,1) is exactly
+// the resting deck's own diagonal lean (renderDeck above) — the baseCell
+// offset below lines the pivot up with where the resting frame puts the
+// middle layer, so looping back to (1,1) and then calling the real
+// renderDeck() afterward is a seamless settle, not a jump. deckStackEl's
+// own box size is left untouched here (matching the resting frame) —
+// offsets that swing left/up render outside that box, which is fine,
+// CSS doesn't clip by default; only sibling layout matters, and that's
+// driven by the unchanged box size, not the content.
+const SPIN_DIRS = [[1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1], [1, 0]];
 const SPIN_FRAME_MS = 90;
 const SPIN_LOOPS = 3;
 
@@ -183,8 +189,8 @@ function renderShuffleFrame(dirIndex) {
     const backGrid = resolveBackGrid(deckOrder[k]);
     const el = k === 0 ? buildCardEl(backGrid) : buildSliverEl(backGrid, dx, dy);
     el.style.position = "absolute";
-    el.style.left = (k * dx * CELL_PX) + "px";
-    el.style.top = (k * dy * CELL_PX) + "px";
+    el.style.left = (CELL_PX + (k - 1) * dx * CELL_PX) + "px";
+    el.style.top = (CELL_PX + (k - 1) * dy * CELL_PX) + "px";
     el.style.zIndex = String(10 - k);
     deckStackEl.appendChild(el);
   }

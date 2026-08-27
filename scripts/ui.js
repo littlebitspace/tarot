@@ -36,10 +36,11 @@ shuffleBtnEl.addEventListener("click", async () => {
   if (shuffleBusy) return;
   shuffleBusy = true;
   shuffleBtnEl.style.opacity = "0.6";
-  await playShuffleAnimation();
-  shuffleDeck();
+  shuffleDeck(); // clear the table + rebuild composition/order FIRST — the animation is just a flourish on top of the already-real new deck, not a reveal mechanic
   renderDeck();
-  renderSettingsPanel();
+  renderSettingsPanel(); // clears the "shuffle to apply" reminder immediately too, matching that the shuffle already happened
+  await playShuffleAnimation();
+  renderDeck(); // settle back to the static resting view
   shuffleBtnEl.style.opacity = "1";
   shuffleBusy = false;
 });
