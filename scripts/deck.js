@@ -175,7 +175,7 @@ export function renderDeck() {
 // offsets that swing left/up render outside that box, which is fine,
 // CSS doesn't clip by default; only sibling layout matters, and that's
 // driven by the unchanged box size, not the content.
-const SPIN_DIRS = [[1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1], [1, 0]];
+const SPIN_DIRS = [[1, 1], [1, 0], [1, -1], [0, -1], [-1, -1], [-1, 0], [-1, 1], [0, 1]];
 const SPIN_FRAME_MS = 90;
 const SPIN_LOOPS = 3;
 
@@ -202,7 +202,11 @@ export function playShuffleAnimation() {
   return new Promise((resolve) => {
     if (deckOrder.length === 0) { resolve(); return; }
     deckAnimating = true;
-    const totalFrames = SPIN_DIRS.length * SPIN_LOOPS;
+    // +1: three full loops, then one more frame landing back on index 0
+    // (the resting deck's own diagonal) — without this, the loop ends on
+    // whichever direction is last in SPIN_DIRS, which isn't the resting
+    // position, so the subsequent renderDeck() snaps to it visibly.
+    const totalFrames = SPIN_DIRS.length * SPIN_LOOPS + 1;
     let i = 0;
     function tick() {
       renderShuffleFrame(i % SPIN_DIRS.length);
