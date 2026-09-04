@@ -21,47 +21,71 @@ const scaleControlEl = document.getElementById("scaleControl");
 // PETSCII palette colour used for checkbox markers.
 const ACCENT_COLOR = "redDark";
 
+// Delay between rows when expanding/collapsing a settings section.
+const SETTINGS_ROW_DELAY = 60;
+
+// UI-only state. These are deliberately not persisted as deck settings.
+const collapsedSections = new Set();
+let settingsAnimation = false;
+
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 function renderShuffleBtn() {
   shuffleBtnEl.innerHTML = "";
   const label = "SHUFFLE";
   const inner = `  ${label}  `;
   const border = "─".repeat(inner.length);
+
   const grid = makeTextGrid([
     "╭" + border + "╮",
     "│" + inner + "│",
     "╰" + border + "╯",
   ], "white");
+
   shuffleBtnEl.appendChild(buildCardEl(grid));
 }
 
 let shuffleBusy = false;
+
 shuffleBtnEl.addEventListener("click", async () => {
   if (shuffleBusy) return;
+
   shuffleBusy = true;
   shuffleBtnEl.style.opacity = "0.6";
+
   shuffleDeck();
   renderDeck();
   renderSettingsPanel();
+
   await playShuffleAnimation();
+
   renderDeck();
   shuffleBtnEl.style.opacity = "1";
   shuffleBusy = false;
 });
 
-/* settings panel */
+/* ------------------------------------------------------------------------- */
+/* Settings panel                                                            */
+/* ------------------------------------------------------------------------- */
 
 function addSettingsLine(grid, onClick) {
   const el = buildCardEl(grid);
+
   if (onClick) {
     el.style.cursor = "pointer";
     el.addEventListener("click", onClick);
   }
+
   settingsPanelEl.appendChild(el);
   return el;
 }
 
 function addBlankLine() {
-  settingsPanelEl.appendChild(buildCardEl(makeTextGrid([""], "white")));
+  settingsPanelEl.appendChild(
+    buildCardEl(makeTextGrid([""], "white"))
+  );
 }
 
 function checkboxText(state) {
@@ -71,23 +95,22 @@ function checkboxText(state) {
 }
 
 /*
- * makeTextGrid() supports one colour per line, but checkbox rows need
- * the marker itself to have a different colour from the surrounding text.
- * Build that one-row grid manually so only x / - uses the accent colour.
+ * makeTextGrid() normally applies one colour to an entire line.
+ * Checkbox rows need the x / - marker to have the accent colour,
+ * so construct those rows cell-by-cell.
  */
 function makeCheckboxGrid(state, label, indent = "") {
   const marker = checkboxText(state);
   const text = `${indent}[${marker}] ${label}`;
+  const markerIndex = indent.length + 1;
 
-  const cells = Array.from(text, (char, index) => {
-    const markerIndex = indent.length + 1;
-    const color =
+  const cells = Array.from(text, (char, index) => ({
+    char,
+    color:
       (marker === "x" || marker === "-") && index === markerIndex
         ? ACCENT_COLOR
-        : "white";
-
-    return { char, color };
-  });
+        : "white",
+  }));
 
   return {
     width: text.length,
@@ -95,6 +118,12 @@ function makeCheckboxGrid(state, label, indent = "") {
     cells,
     bg: "black",
   };
+}
+
+function makeSectionHeaderGrid(label, collapsed) {
+  return makeTextGrid([
+    `${label} [${collapsed ? "v" : "^"}]`,
+  ], "white");
 }
 
 function getGroupState(group) {
@@ -112,6 +141,8 @@ function getGroupState(group) {
 }
 
 function toggleGroup(group) {
+  if (settingsAnimation) return;
+
   const sets = CARD_SETS.filter(set => set.group === group);
   const state = getGroupState(group);
 
@@ -124,37 +155,113 @@ function toggleGroup(group) {
   renderSettingsPanel();
 }
 
-function buildCardsPerDrawRow() {
-  const row = document.createElement("div");
-  row.style.display = "flex";
-  row.style.alignItems = "center";
-  row.style.gap = CELL_PX + "px";
+/*
+ * A section consists of a header and an array of rows that can be inserted
+ * or removed one at a time. This lets the whole settings panel move naturally
+ * as rows are revealed/hidden.
+ */
+function createSection(id, label, buildContent) {
+  const collapsed = collapsedSections.has(id);
 
-  const minusEl = buildMiniBtn("-", () => {
-    settings.cardsPerDraw = clamp(settings.cardsPerDraw - 1, 1, 10);
-    renderSettingsPanel();
-  });
-
-  const labelEl = buildCardEl(
-    makeTextGrid([`Cards per draw: ${settings.cardsPerDraw}`], "white")
+  const header = addSettingsLine(
+    makeSectionHeaderGrid(label, collapsed),
+    () => toggleSection(id)
   );
 
-  const plusEl = buildMiniBtn("+", () => {
-    settings.cardsPerDraw = clamp(settings.cardsPerDraw + 1, 1, 10);
-    renderSettingsPanel();
+  const contentRows = [];
+
+  buildContent(row => {
+    contentRows.push(row);
   });
 
-  row.appendChild(minusEl);
-  row.appendChild(labelEl);
-  row.appendChild(plusEl);
-  settingsPanelEl.appendChild(row);
+  return {
+    id,
+    label,
+    header,
+    contentRows,
+  };
 }
 
-function renderSettingsPanel() {
-  settingsPanelEl.innerHTML = "";
+function createSettingsRow(grid, onClick) {
+  const el = buildCardEl(grid);
 
-  addSettingsLine(makeTextGrid(["Cards in the deck"], "white"));
-  addBlankLine();
+  if (onClick) {
+    el.style.cursor = "pointer";
+    el.addEventListener("click", onClick);
+  }
+
+  return el;
+}
+
+async function toggleSection(id) {
+  if (settingsAnimation) return;
+
+  const section = settingsSections.get(id);
+  if (!section) return;
+
+  settingsAnimation = true;
+
+  if (collapsedSections.has(id)) {
+    // Expand
+    collapsedSections.delete(id);
+
+    const oldHeader = section.header;
+    const newHeader = createSectionHeaderElement(section, false);
+
+    oldHeader.replaceWith(newHeader);
+
+    // The section's rows must be inserted immediately after its header.
+    let insertBefore = newHeader.nextSibling;
+
+    for (const row of section.contentRows) {
+      settingsPanelEl.insertBefore(row, insertBefore);
+      await delay(SETTINGS_ROW_DELAY);
+    }
+  } else {
+    // Collapse
+    collapsedSections.add(id);
+
+    for (let i = section.contentRows.length - 1; i >= 0; i--) {
+      const row = section.contentRows[i];
+
+      if (row.parentNode === settingsPanelEl) {
+        settingsPanelEl.removeChild(row);
+      }
+
+      await delay(SETTINGS_ROW_DELAY);
+    }
+
+    const oldHeader = section.header;
+    const newHeader = createSectionHeaderElement(section, true);
+
+    oldHeader.replaceWith(newHeader);
+  }
+
+  settingsAnimation = false;
+  saveState();
+}
+
+function createSectionHeaderElement(section, collapsed) {
+  const el = buildCardEl(
+    makeSectionHeaderGrid(section.label, collapsed)
+  );
+
+  el.style.cursor = "pointer";
+  el.addEventListener("click", () => toggleSection(section.id));
+
+  section.header = el;
+
+  return el;
+}
+
+/*
+ * Stores the currently rendered sections so that an expansion/collapse
+ * animation can operate on their existing DOM rows.
+ */
+const settingsSections = new Map();
+
+function buildCardsSection() {
+  const rows = [];
 
   let lastGroup = null;
 
@@ -164,103 +271,287 @@ function renderSettingsPanel() {
 
       const groupState = getGroupState(set.group);
 
-      addSettingsLine(
-        makeCheckboxGrid(groupState, set.group),
-        () => toggleGroup(set.group)
+      rows.push(
+        createSettingsRow(
+          makeCheckboxGrid(groupState, set.group),
+          () => toggleGroup(set.group)
+        )
       );
 
-      addBlankLine();
+      rows.push(
+        createSettingsRow(
+          makeTextGrid([""], "white")
+        )
+      );
     }
 
     const checked = settings.enabledSets.has(set.id);
 
-    addSettingsLine(
-      makeCheckboxGrid(checked ? "on" : "off", set.label, "  "),
-      () => {
-        if (checked) {
-          settings.enabledSets.delete(set.id);
-        } else {
-          settings.enabledSets.add(set.id);
+    rows.push(
+      createSettingsRow(
+        makeCheckboxGrid(
+          checked ? "on" : "off",
+          set.label,
+          "  "
+        ),
+        () => {
+          if (settingsAnimation) return;
+
+          if (checked) {
+            settings.enabledSets.delete(set.id);
+          } else {
+            settings.enabledSets.add(set.id);
+          }
+
+          renderSettingsPanel();
         }
+      )
+    );
+
+    rows.push(
+      createSettingsRow(
+        makeTextGrid([""], "white")
+      )
+    );
+  }
+
+  return rows;
+}
+
+function buildCardOptionsSection() {
+  const rows = [];
+
+  rows.push(
+    createSettingsRow(
+      makeCheckboxGrid(
+        settings.sameBack ? "on" : "off",
+        "Same back for all cards"
+      ),
+      () => {
+        if (settingsAnimation) return;
+
+        settings.sameBack = !settings.sameBack;
+        renderSettingsPanel();
+      }
+    )
+  );
+
+  rows.push(
+    createSettingsRow(
+      makeTextGrid([""], "white")
+    )
+  );
+
+  rows.push(
+    createSettingsRow(
+      makeCheckboxGrid(
+        settings.allUpright ? "on" : "off",
+        "All cards upright"
+      ),
+      () => {
+        if (settingsAnimation) return;
+
+        settings.allUpright = !settings.allUpright;
+        renderSettingsPanel();
+      }
+    )
+  );
+
+  rows.push(
+    createSettingsRow(
+      makeTextGrid([""], "white")
+    )
+  );
+
+  return rows;
+}
+
+function buildInteractionSection() {
+  const rows = [];
+
+  rows.push(
+    createSettingsRow(
+      makeCheckboxGrid(
+        settings.attachOnDrop ? "on" : "off",
+        "Attach cards on drop"
+      ),
+      () => {
+        if (settingsAnimation) return;
+
+        settings.attachOnDrop = !settings.attachOnDrop;
+        renderSettingsPanel();
+      }
+    )
+  );
+
+  rows.push(
+    createSettingsRow(
+      makeTextGrid([""], "white")
+    )
+  );
+
+  const cardsPerDrawRow = document.createElement("div");
+  cardsPerDrawRow.style.display = "flex";
+  cardsPerDrawRow.style.alignItems = "center";
+  cardsPerDrawRow.style.gap = CELL_PX + "px";
+
+  const minusEl = buildMiniBtn("-", () => {
+    if (settingsAnimation) return;
+
+    settings.cardsPerDraw = clamp(
+      settings.cardsPerDraw - 1,
+      1,
+      10
+    );
+
+    renderSettingsPanel();
+  });
+
+  const labelEl = buildCardEl(
+    makeTextGrid(
+      [`Cards per draw: ${settings.cardsPerDraw}`],
+      "white"
+    )
+  );
+
+  const plusEl = buildMiniBtn("+", () => {
+    if (settingsAnimation) return;
+
+    settings.cardsPerDraw = clamp(
+      settings.cardsPerDraw + 1,
+      1,
+      10
+    );
+
+    renderSettingsPanel();
+  });
+
+  cardsPerDrawRow.appendChild(minusEl);
+  cardsPerDrawRow.appendChild(labelEl);
+  cardsPerDrawRow.appendChild(plusEl);
+
+  rows.push(cardsPerDrawRow);
+
+  rows.push(
+    createSettingsRow(
+      makeTextGrid([""], "white")
+    )
+  );
+
+  return rows;
+}
+
+function buildDisplaySection() {
+  const rows = [];
+
+  rows.push(
+    createSettingsRow(
+      makeCheckboxGrid(
+        settings.showInterpretations ? "on" : "off",
+        "Show Interpretations"
+      ),
+      () => {
+        if (settingsAnimation) return;
+
+        settings.showInterpretations = !settings.showInterpretations;
+
+        placedCards.forEach(state => {
+          if (state.tipEl.children.length) {
+            state.tipEl.style.display =
+              settings.showInterpretations
+                ? "block"
+                : "none";
+          }
+        });
 
         renderSettingsPanel();
       }
+    )
+  );
+
+  rows.push(
+    createSettingsRow(
+      makeTextGrid([""], "white")
+    )
+  );
+
+  return rows;
+}
+
+function renderSettingsPanel() {
+  settingsPanelEl.innerHTML = "";
+  settingsSections.clear();
+
+  const sections = [
+    {
+      id: "cards",
+      label: "Cards",
+      build: buildCardsSection,
+    },
+    {
+      id: "cardOptions",
+      label: "Card options",
+      build: buildCardOptionsSection,
+    },
+    {
+      id: "interaction",
+      label: "Interaction",
+      build: buildInteractionSection,
+    },
+    {
+      id: "display",
+      label: "Display",
+      build: buildDisplaySection,
+    },
+  ];
+
+  for (const definition of sections) {
+    const collapsed = collapsedSections.has(definition.id);
+
+    const header = createSectionHeaderElement(
+      {
+        id: definition.id,
+        label: definition.label,
+      },
+      collapsed
     );
 
-    addBlankLine();
-  }
+    settingsPanelEl.appendChild(header);
 
-  addSettingsLine(makeTextGrid(["-".repeat(20)], "grayDark"));
-  addBlankLine();
+    const section = {
+      id: definition.id,
+      label: definition.label,
+      header,
+      contentRows: [
+        createSettingsRow(makeTextGrid([""], "white")),
+        ...definition.build(),
+      ],
+    };
 
-  addSettingsLine(
-    makeCheckboxGrid(
-      settings.sameBack ? "on" : "off",
-      "Same back for all cards"
-    ),
-    () => {
-      settings.sameBack = !settings.sameBack;
-      renderSettingsPanel();
-    }
-  );
-  addBlankLine();
+    settingsSections.set(definition.id, section);
 
-  addSettingsLine(
-    makeCheckboxGrid(
-      settings.allUpright ? "on" : "off",
-      "All cards upright"
-    ),
-    () => {
-      settings.allUpright = !settings.allUpright;
-      renderSettingsPanel();
-    }
-  );
-  addBlankLine();
-
-  addSettingsLine(makeTextGrid(["-".repeat(20)], "grayDark"));
-  addBlankLine();
-
-  addSettingsLine(
-    makeCheckboxGrid(
-      settings.attachOnDrop ? "on" : "off",
-      "Attach cards on drop"
-    ),
-    () => {
-      settings.attachOnDrop = !settings.attachOnDrop;
-      renderSettingsPanel();
-    }
-  );
-  addBlankLine();
-
-  buildCardsPerDrawRow();
-  addBlankLine();
-
-  addSettingsLine(
-    makeCheckboxGrid(
-      settings.showInterpretations ? "on" : "off",
-      "Show Interpretations"
-    ),
-    () => {
-      settings.showInterpretations = !settings.showInterpretations;
-
-      placedCards.forEach(state => {
-        if (state.tipEl.children.length) {
-          state.tipEl.style.display =
-            settings.showInterpretations ? "block" : "none";
-        }
+    if (!collapsed) {
+      section.contentRows.forEach(row => {
+        settingsPanelEl.appendChild(row);
       });
-
-      renderSettingsPanel();
     }
-  );
-  addBlankLine();
+    settingsPanelEl.appendChild(
+      createSettingsRow(makeTextGrid([""], "white"))
+    );
+  }
 
   if (
     lastAppliedSettings &&
-    !deckSettingsMatch(snapshotDeckSettings(), lastAppliedSettings)
+    !deckSettingsMatch(
+      snapshotDeckSettings(),
+      lastAppliedSettings
+    )
   ) {
     addSettingsLine(
-      makeTextGrid(["Shuffle to apply deck changes"], "yellow")
+      makeTextGrid(
+        ["Shuffle to apply deck changes"],
+        "yellow"
+      )
     );
   }
 
@@ -284,13 +575,19 @@ function buildMiniBtn(label, onClick) {
   return el;
 }
 
+/* ------------------------------------------------------------------------- */
+/* Scale control                                                             */
+/* ------------------------------------------------------------------------- */
+
 function renderScaleControl() {
   scaleControlEl.innerHTML = "";
 
   const minusEl = buildMiniBtn("-", () => applyScale(SCALE - 1));
+
   const labelEl = buildCardEl(
     makeTextGrid([`Scale ${SCALE}x`], "white")
   );
+
   const plusEl = buildMiniBtn("+", () => applyScale(SCALE + 1));
 
   scaleControlEl.appendChild(minusEl);
@@ -306,6 +603,7 @@ function layoutChrome() {
 
   deckAreaEl.style.top =
     (CELL_PX + scaleControlHeight + CELL_PX) + "px";
+
   deckAreaEl.style.left = CELL_PX + "px";
 
   deckCountEl.style.marginTop = CELL_PX + "px";
@@ -314,7 +612,8 @@ function layoutChrome() {
 }
 
 function refreshForScale() {
-  table.style.backgroundSize = CELL_PX + "px " + CELL_PX + "px";
+  table.style.backgroundSize =
+    CELL_PX + "px " + CELL_PX + "px";
 
   document.querySelectorAll(".card-pre").forEach(pre => {
     pre.style.fontSize = CELL_PX + "px";
@@ -338,7 +637,12 @@ function applyScale(newScale) {
   saveState();
 }
 
-table.style.backgroundSize = CELL_PX + "px " + CELL_PX + "px";
+/* ------------------------------------------------------------------------- */
+/* Initialisation                                                            */
+/* ------------------------------------------------------------------------- */
+
+table.style.backgroundSize =
+  CELL_PX + "px " + CELL_PX + "px";
 
 renderShuffleBtn();
 renderScaleControl();
@@ -347,10 +651,14 @@ layoutChrome();
 function renderLoadErrors(errors) {
   if (!errors.length) return;
 
-  console.error("Card loading errors:\n" + errors.join("\n"));
+  console.error(
+    "Card loading errors:\n" + errors.join("\n")
+  );
 
   const shown = errors.slice(0, 8);
-  const lines = [`${errors.length} card(s) failed to load:`];
+  const lines = [
+    `${errors.length} card(s) failed to load:`,
+  ];
 
   shown.forEach(e => lines.push(...wrapText(e, 30)));
 
@@ -360,7 +668,10 @@ function renderLoadErrors(errors) {
     );
   }
 
-  const box = buildCardEl(makeTextGrid(lines, "red"));
+  const box = buildCardEl(
+    makeTextGrid(lines, "red")
+  );
+
   box.style.marginTop = "12px";
   deckAreaEl.appendChild(box);
 }
@@ -380,7 +691,9 @@ async function init() {
     settings.enabledSets = new Set(
       CARD_SETS
         .filter(
-          s => s.id === "tarotMajor" || s.id === "tarotMinor"
+          s =>
+            s.id === "tarotMajor" ||
+            s.id === "tarotMinor"
         )
         .map(s => s.id)
     );
