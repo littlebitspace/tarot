@@ -32,39 +32,107 @@ function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function renderShuffleBtn() {
-  shuffleBtnEl.innerHTML = "";
-  const label = "SHUFFLE";
-  const inner = `  ${label}  `;
+function buildActionBtn(label, color = "white", width = label.length) {
+  const inner = ` ${label.padStart(Math.ceil((width + label.length) / 2)).padEnd(width)} `;
   const border = "─".repeat(inner.length);
 
   const grid = makeTextGrid([
     "╭" + border + "╮",
     "│" + inner + "│",
     "╰" + border + "╯",
-  ], "white");
+  ], color);
 
-  shuffleBtnEl.appendChild(buildCardEl(grid));
+  return buildCardEl(grid);
+}
+
+function renderShuffleBtn() {
+  shuffleBtnEl.innerHTML = "";
+
+  const shuffleAllBtn = buildActionBtn(
+    shuffleAllConfirm ? "CONFIRM?" : "SHUFFLE ALL",
+    shuffleAllConfirm ? "yellow" : "white",
+    "SHUFFLE ALL".length
+  );
+
+  shuffleAllBtn.addEventListener("click", handleShuffleAll);
+
+  shuffleBtnEl.appendChild(shuffleAllBtn);
+
+  const shuffleBtn = buildActionBtn("SHUFFLE");
+
+  shuffleBtn.style.marginTop = CELL_PX + "px";
+  shuffleBtn.addEventListener("click", handleShuffle);
+
+  shuffleBtnEl.appendChild(shuffleBtn);
 }
 
 let shuffleBusy = false;
+let shuffleAllConfirm = false;
+let shuffleConfirmTimer = null;
 
-shuffleBtnEl.addEventListener("click", async () => {
+const SHUFFLE_CONFIRM_MS = 5000;
+
+function armShuffleAllConfirmation() {
+  shuffleAllConfirm = true;
+  renderShuffleBtn();
+
+  clearTimeout(shuffleConfirmTimer);
+
+  shuffleConfirmTimer = setTimeout(() => {
+    shuffleAllConfirm = false;
+    shuffleConfirmTimer = null;
+    renderShuffleBtn();
+  }, SHUFFLE_CONFIRM_MS);
+}
+
+async function handleShuffleAll() {
   if (shuffleBusy) return;
+
+  if (!shuffleAllConfirm) {
+    armShuffleAllConfirmation();
+    return;
+  }
+
+  // Confirmation accepted
+  clearTimeout(shuffleConfirmTimer);
+  shuffleConfirmTimer = null;
+  shuffleAllConfirm = false;
+
+  // Immediately restore the normal button
+  renderShuffleBtn();
 
   shuffleBusy = true;
   shuffleBtnEl.style.opacity = "0.6";
 
-  shuffleDeck();
+  shuffleDeck(true);
   renderDeck();
   renderSettingsPanel();
 
   await playShuffleAnimation();
 
   renderDeck();
+
   shuffleBtnEl.style.opacity = "1";
   shuffleBusy = false;
-});
+}
+
+async function handleShuffle() {
+  if (shuffleBusy) return;
+
+  shuffleBusy = true;
+  shuffleBtnEl.style.opacity = "0.6";
+
+  shuffleDeck(false);
+  renderDeck();
+  renderSettingsPanel();
+
+  await playShuffleAnimation();
+
+  renderDeck();
+
+  shuffleBtnEl.style.opacity = "1";
+  shuffleBusy = false;
+}
 
 /* ------------------------------------------------------------------------- */
 /* Settings panel                                                            */

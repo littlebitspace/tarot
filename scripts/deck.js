@@ -227,11 +227,20 @@ export function playShuffleAnimation() {
 // callers (Shuffle button handler, init()) call renderDeck() themselves,
 // same as they need to re-render the settings panel to clear the
 // "shuffle to apply" reminder, which lives outside this module.
-export function shuffleDeck() {
-  for (const state of placedCards.values()) state.el.remove();
-  placedCards.clear();
-  deckOrder = buildDeckFromSettings();
-  setLastAppliedSettings(snapshotDeckSettings());
+export function shuffleDeck(clearTable = true) {
+  if (clearTable) {
+    for (const state of placedCards.values()) state.el.remove();
+    placedCards.clear();
+
+    deckOrder = buildDeckFromSettings();
+    setLastAppliedSettings(snapshotDeckSettings());
+  } else {
+    // Only shuffle cards that are currently left in the deck.
+    for (let i = deckOrder.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [deckOrder[i], deckOrder[j]] = [deckOrder[j], deckOrder[i]];
+    }
+  }
 }
 
 const DRAW_FAN_STEP = 3; // exposed columns per non-topmost card in a multi-card deal
