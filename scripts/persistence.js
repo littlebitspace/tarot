@@ -1,4 +1,12 @@
-import { SCALE, setScale, settings, lastAppliedSettings, setLastAppliedSettings } from "./config.js";
+import {
+  SCALE,
+  setScale,
+  settings,
+  lastAppliedSettings,
+  setLastAppliedSettings,
+  deckWasExplicitlyShuffled,
+  setDeckWasExplicitlyShuffled,
+} from "./config.js";
 import { table, placedCards, createPlacedCard, positionCardAt, restackChain } from "./card.js";
 import { CARD_SETS, getDeckOrder, setDeckOrder, findCardByFile, resolveBackGrid } from "./deck.js";
 
@@ -29,6 +37,7 @@ export function saveState() {
         sameBack: lastAppliedSettings.sameBack,
         allUpright: lastAppliedSettings.allUpright,
       } : null,
+      deckWasExplicitlyShuffled,
       deckOrder: getDeckOrder().map(c => c.file),
       placedCards: [...placedCards.values()].map(s => ({
         instId: s.instId,
@@ -74,7 +83,15 @@ export function loadState() {
     settings.cardsPerDraw = Math.max(1, data.settings.cardsPerDraw || 1);
 
     if (data.scale) setScale(data.scale);
-    setLastAppliedSettings(data.lastAppliedSettings ? restoreSnapshot(data.lastAppliedSettings) : null);
+    setLastAppliedSettings(
+      data.lastAppliedSettings
+        ? restoreSnapshot(data.lastAppliedSettings)
+        : null
+    );
+
+    setDeckWasExplicitlyShuffled(
+      !!data.deckWasExplicitlyShuffled
+    );
 
     setDeckOrder((data.deckOrder || []).map(findCardByFile).filter(Boolean));
 

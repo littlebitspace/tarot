@@ -56,8 +56,17 @@ export const settings = {
 // or hide the "shuffle to apply" reminder.
 export let lastAppliedSettings = null;
 
+// True only after the user explicitly shuffles the current deck.
+// Rebuilding the initial deck does not count as an explicit shuffle.
+// Returning cards to the deck resets this to false.
+export let deckWasExplicitlyShuffled = false;
+
 export function setLastAppliedSettings(snapshot) {
   lastAppliedSettings = snapshot;
+}
+
+export function setDeckWasExplicitlyShuffled(value) {
+  deckWasExplicitlyShuffled = value;
 }
 
 export function snapshotDeckSettings() {

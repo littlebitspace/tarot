@@ -1,6 +1,11 @@
 import {
   CELL_PX, CARD_PX_W, CARD_PX_H,
-  settings, lastAppliedSettings, setLastAppliedSettings, snapshotDeckSettings,
+  settings,
+  lastAppliedSettings,
+  setLastAppliedSettings,
+  snapshotDeckSettings,
+  deckWasExplicitlyShuffled,
+  setDeckWasExplicitlyShuffled,
 } from "./config.js";
 import { decodeFramebuf, buildCardEl, buildSliverEl, makeTextGrid } from "./renderer.js";
 import {
@@ -157,8 +162,19 @@ export function renderDeck() {
   }
 
   deckCountEl.innerHTML = "";
-  const countGrid = makeTextGrid([`Cards in deck: ${deckOrder.length}`], "white");
+
+  const countGrid = makeTextGrid(
+    [`Cards in deck: ${deckOrder.length}`],
+    "white"
+  );
+
+  const stateGrid = makeTextGrid(
+    [deckWasExplicitlyShuffled ? "SHUFFLED" : "UNSHUFFLED"],
+    deckWasExplicitlyShuffled ? "gray" : "yellow"
+  );
+
   deckCountEl.appendChild(buildCardEl(countGrid));
+  deckCountEl.appendChild(buildCardEl(stateGrid));
 }
 
 // The 8 compass directions in the exact rotational order from the spec —
@@ -227,7 +243,7 @@ export function playShuffleAnimation() {
 // callers (Shuffle button handler, init()) call renderDeck() themselves,
 // same as they need to re-render the settings panel to clear the
 // "shuffle to apply" reminder, which lives outside this module.
-export function shuffleDeck(clearTable = true) {
+export function shuffleDeck(clearTable = true, markAsExplicitShuffle = false) {
   if (clearTable) {
     for (const state of placedCards.values()) state.el.remove();
     placedCards.clear();
@@ -240,6 +256,10 @@ export function shuffleDeck(clearTable = true) {
       const j = Math.floor(Math.random() * (i + 1));
       [deckOrder[i], deckOrder[j]] = [deckOrder[j], deckOrder[i]];
     }
+  }
+
+  if (markAsExplicitShuffle) {
+    setDeckWasExplicitlyShuffled(true);
   }
 }
 
@@ -338,6 +358,9 @@ setOnChainDropped((chain) => {
 
   deckOrder = chronological.map(s => s.card);
   chain.forEach(s => { placedCards.delete(s.instId); s.el.remove(); });
+
+  setDeckWasExplicitlyShuffled(false);
+
   renderDeck();
   return true;
 });

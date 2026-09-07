@@ -1,4 +1,12 @@
-import { SCALE, CELL_PX, setScale, settings, lastAppliedSettings, snapshotDeckSettings, deckSettingsMatch } from "./config.js";
+import {
+  SCALE,
+  CELL_PX,
+  setScale,
+  settings,
+  lastAppliedSettings,
+  snapshotDeckSettings,
+  deckSettingsMatch,
+} from "./config.js";
 import { makeTextGrid, wrapText, buildCardEl } from "./renderer.js";
 import { placedCards, clamp, refreshCardSize, setOnStateChanged } from "./card.js";
 import { CARD_SETS, loadManifest, renderDeck, shuffleDeck, playShuffleAnimation } from "./deck.js";
@@ -47,6 +55,8 @@ function buildActionBtn(label, color = "white", width = label.length) {
 
 function renderShuffleBtn() {
   shuffleBtnEl.innerHTML = "";
+  shuffleBtnEl.style.display = "flex";
+  shuffleBtnEl.style.gap = CELL_PX + "px";
 
   const shuffleAllBtn = buildActionBtn(
     shuffleAllConfirm ? "CONFIRM?" : "SHUFFLE ALL",
@@ -60,7 +70,6 @@ function renderShuffleBtn() {
 
   const shuffleBtn = buildActionBtn("SHUFFLE");
 
-  shuffleBtn.style.marginTop = CELL_PX + "px";
   shuffleBtn.addEventListener("click", handleShuffle);
 
   shuffleBtnEl.appendChild(shuffleBtn);
@@ -104,7 +113,7 @@ async function handleShuffleAll() {
   shuffleBusy = true;
   shuffleBtnEl.style.opacity = "0.6";
 
-  shuffleDeck(true);
+  shuffleDeck(true, true);
   renderDeck();
   renderSettingsPanel();
 
@@ -122,7 +131,7 @@ async function handleShuffle() {
   shuffleBusy = true;
   shuffleBtnEl.style.opacity = "0.6";
 
-  shuffleDeck(false);
+  shuffleDeck(false, true);
   renderDeck();
   renderSettingsPanel();
 
@@ -434,8 +443,232 @@ function buildCardOptionsSection() {
   return rows;
 }
 
-function buildInteractionSection() {
+// function buildInteractionSection() {
+//   const rows = [];
+
+//   rows.push(
+//     createSettingsRow(
+//       makeCheckboxGrid(
+//         settings.attachOnDrop ? "on" : "off",
+//         "Attach cards on drop"
+//       ),
+//       () => {
+//         if (settingsAnimation) return;
+
+//         settings.attachOnDrop = !settings.attachOnDrop;
+//         renderSettingsPanel();
+//       }
+//     )
+//   );
+
+//   rows.push(
+//     createSettingsRow(
+//       makeTextGrid([""], "white")
+//     )
+//   );
+
+//   const cardsPerDrawRow = document.createElement("div");
+//   cardsPerDrawRow.style.display = "flex";
+//   cardsPerDrawRow.style.alignItems = "center";
+//   cardsPerDrawRow.style.gap = CELL_PX + "px";
+
+//   const minusEl = buildMiniBtn("-", () => {
+//     if (settingsAnimation) return;
+
+//     settings.cardsPerDraw = clamp(
+//       settings.cardsPerDraw - 1,
+//       1,
+//       10
+//     );
+
+//     renderSettingsPanel();
+//   });
+
+//   const labelEl = buildCardEl(
+//     makeTextGrid(
+//       [`Cards per draw: ${settings.cardsPerDraw}`],
+//       "white"
+//     )
+//   );
+
+//   const plusEl = buildMiniBtn("+", () => {
+//     if (settingsAnimation) return;
+
+//     settings.cardsPerDraw = clamp(
+//       settings.cardsPerDraw + 1,
+//       1,
+//       10
+//     );
+
+//     renderSettingsPanel();
+//   });
+
+//   cardsPerDrawRow.appendChild(minusEl);
+//   cardsPerDrawRow.appendChild(labelEl);
+//   cardsPerDrawRow.appendChild(plusEl);
+
+//   rows.push(cardsPerDrawRow);
+
+//   rows.push(
+//     createSettingsRow(
+//       makeTextGrid([""], "white")
+//     )
+//   );
+
+//   return rows;
+// }
+
+// function buildDisplaySection() {
+//   const rows = [];
+
+//   rows.push(
+//     createSettingsRow(
+//       makeCheckboxGrid(
+//         settings.showInterpretations ? "on" : "off",
+//         "Show Interpretations"
+//       ),
+//       () => {
+//         if (settingsAnimation) return;
+
+//         settings.showInterpretations = !settings.showInterpretations;
+
+//         placedCards.forEach(state => {
+//           if (state.tipEl.children.length) {
+//             state.tipEl.style.display =
+//               settings.showInterpretations
+//                 ? "block"
+//                 : "none";
+//           }
+//         });
+
+//         renderSettingsPanel();
+//       }
+//     )
+//   );
+
+//   rows.push(
+//     createSettingsRow(
+//       makeTextGrid([""], "white")
+//     )
+//   );
+
+//   return rows;
+// }
+
+function renderSettingsPanel() {
+  settingsPanelEl.innerHTML = "";
+  settingsSections.clear();
+
+  const sections = [
+    {
+      id: "cards",
+      label: "Cards",
+      build: buildCardsSection,
+    },
+    {
+      id: "preferences",
+      label: "Preferences",
+      build: buildPreferencesSection,
+    },
+  ];
+
+  for (const definition of sections) {
+    const collapsed = collapsedSections.has(definition.id);
+
+    const header = createSectionHeaderElement(
+      {
+        id: definition.id,
+        label: definition.label,
+      },
+      collapsed
+    );
+
+    settingsPanelEl.appendChild(header);
+
+    const section = {
+      id: definition.id,
+      label: definition.label,
+      header,
+      contentRows: [
+        createSettingsRow(makeTextGrid([""], "white")),
+        ...definition.build(),
+      ],
+    };
+
+    settingsSections.set(definition.id, section);
+
+    if (!collapsed) {
+      section.contentRows.forEach(row => {
+        settingsPanelEl.appendChild(row);
+      });
+    }
+    settingsPanelEl.appendChild(
+      createSettingsRow(makeTextGrid([""], "white"))
+    );
+  }
+
+  if (
+    lastAppliedSettings &&
+    !deckSettingsMatch(
+      snapshotDeckSettings(),
+      lastAppliedSettings
+    )
+  ) {
+    addSettingsLine(
+      makeTextGrid(
+        ["Shuffle to apply deck changes"],
+        "yellow"
+      )
+    );
+  }
+
+  saveState();
+}
+
+function buildPreferencesSection() {
   const rows = [];
+
+  rows.push(
+    createSettingsRow(
+      makeCheckboxGrid(
+        settings.sameBack ? "on" : "off",
+        "Same back for all cards"
+      ),
+      () => {
+        if (settingsAnimation) return;
+
+        settings.sameBack = !settings.sameBack;
+        renderSettingsPanel();
+      }
+    )
+  );
+
+  rows.push(
+    createSettingsRow(
+      makeTextGrid([""], "white")
+    )
+  );
+
+  rows.push(
+    createSettingsRow(
+      makeCheckboxGrid(
+        settings.allUpright ? "on" : "off",
+        "All cards upright"
+      ),
+      () => {
+        if (settingsAnimation) return;
+
+        settings.allUpright = !settings.allUpright;
+        renderSettingsPanel();
+      }
+    )
+  );
+
+  rows.push(
+    createSettingsRow(
+      makeTextGrid([""], "white")
+    )
+  );
 
   rows.push(
     createSettingsRow(
@@ -506,12 +739,6 @@ function buildInteractionSection() {
     )
   );
 
-  return rows;
-}
-
-function buildDisplaySection() {
-  const rows = [];
-
   rows.push(
     createSettingsRow(
       makeCheckboxGrid(
@@ -544,86 +771,6 @@ function buildDisplaySection() {
   );
 
   return rows;
-}
-
-function renderSettingsPanel() {
-  settingsPanelEl.innerHTML = "";
-  settingsSections.clear();
-
-  const sections = [
-    {
-      id: "cards",
-      label: "Cards",
-      build: buildCardsSection,
-    },
-    {
-      id: "cardOptions",
-      label: "Card options",
-      build: buildCardOptionsSection,
-    },
-    {
-      id: "interaction",
-      label: "Interaction",
-      build: buildInteractionSection,
-    },
-    {
-      id: "display",
-      label: "Display",
-      build: buildDisplaySection,
-    },
-  ];
-
-  for (const definition of sections) {
-    const collapsed = collapsedSections.has(definition.id);
-
-    const header = createSectionHeaderElement(
-      {
-        id: definition.id,
-        label: definition.label,
-      },
-      collapsed
-    );
-
-    settingsPanelEl.appendChild(header);
-
-    const section = {
-      id: definition.id,
-      label: definition.label,
-      header,
-      contentRows: [
-        createSettingsRow(makeTextGrid([""], "white")),
-        ...definition.build(),
-      ],
-    };
-
-    settingsSections.set(definition.id, section);
-
-    if (!collapsed) {
-      section.contentRows.forEach(row => {
-        settingsPanelEl.appendChild(row);
-      });
-    }
-    settingsPanelEl.appendChild(
-      createSettingsRow(makeTextGrid([""], "white"))
-    );
-  }
-
-  if (
-    lastAppliedSettings &&
-    !deckSettingsMatch(
-      snapshotDeckSettings(),
-      lastAppliedSettings
-    )
-  ) {
-    addSettingsLine(
-      makeTextGrid(
-        ["Shuffle to apply deck changes"],
-        "yellow"
-      )
-    );
-  }
-
-  saveState();
 }
 
 function buildMiniBtn(label, onClick) {
@@ -664,17 +811,16 @@ function renderScaleControl() {
 }
 
 function layoutChrome() {
-  scaleControlEl.style.top = CELL_PX + "px";
-  scaleControlEl.style.gap = CELL_PX + "px";
-
-  const scaleControlHeight = 3 * CELL_PX;
-
-  deckAreaEl.style.top =
-    (CELL_PX + scaleControlHeight + CELL_PX) + "px";
-
+  deckAreaEl.style.top = CELL_PX + "px";
   deckAreaEl.style.left = CELL_PX + "px";
 
+  scaleControlEl.style.gap = CELL_PX + "px";
+
+  const deckStack = document.getElementById("deckStack");
+  deckStack.style.marginTop = CELL_PX + "px";
+
   deckCountEl.style.marginTop = CELL_PX + "px";
+  deckCountEl.style.gap = CELL_PX + "px";
   shuffleBtnEl.style.marginTop = CELL_PX + "px";
   settingsPanelEl.style.marginTop = CELL_PX + "px";
 }
