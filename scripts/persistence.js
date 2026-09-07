@@ -95,7 +95,7 @@ export function loadState() {
     );
 
     setDeckWasExplicitlyShuffled(
-      !!data.deckWasExplicitlyShuffled
+      data.deckWasExplicitlyShuffled === true
     );
 
     setCollapsedSections(
