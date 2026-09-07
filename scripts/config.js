@@ -84,3 +84,10 @@ export function deckSettingsMatch(a, b) {
   for (const id of a.enabledSets) if (!b.enabledSets.has(id)) return false;
   return true;
 }
+
+export const collapsedSections = new Set();
+
+export function setCollapsedSections(sections) {
+  collapsedSections.clear();
+  sections.forEach(id => collapsedSections.add(id));
+}

@@ -6,6 +6,8 @@ import {
   lastAppliedSettings,
   snapshotDeckSettings,
   deckSettingsMatch,
+  setDeckWasExplicitlyShuffled,
+  collapsedSections,
 } from "./config.js";
 import { makeTextGrid, wrapText, buildCardEl } from "./renderer.js";
 import { placedCards, clamp, refreshCardSize, setOnStateChanged } from "./card.js";
@@ -33,7 +35,6 @@ const ACCENT_COLOR = "redDark";
 const SETTINGS_ROW_DELAY = 60;
 
 // UI-only state. These are deliberately not persisted as deck settings.
-const collapsedSections = new Set();
 let settingsAnimation = false;
 
 function delay(ms) {
@@ -58,6 +59,12 @@ function renderShuffleBtn() {
   shuffleBtnEl.style.display = "flex";
   shuffleBtnEl.style.gap = CELL_PX + "px";
 
+  const shuffleBtn = buildActionBtn("SHUFFLE");
+
+  shuffleBtn.addEventListener("click", handleShuffle);
+
+  shuffleBtnEl.appendChild(shuffleBtn);
+
   const shuffleAllBtn = buildActionBtn(
     shuffleAllConfirm ? "CONFIRM?" : "SHUFFLE ALL",
     shuffleAllConfirm ? "yellow" : "white",
@@ -67,12 +74,6 @@ function renderShuffleBtn() {
   shuffleAllBtn.addEventListener("click", handleShuffleAll);
 
   shuffleBtnEl.appendChild(shuffleAllBtn);
-
-  const shuffleBtn = buildActionBtn("SHUFFLE");
-
-  shuffleBtn.addEventListener("click", handleShuffle);
-
-  shuffleBtnEl.appendChild(shuffleBtn);
 }
 
 let shuffleBusy = false;
@@ -113,13 +114,15 @@ async function handleShuffleAll() {
   shuffleBusy = true;
   shuffleBtnEl.style.opacity = "0.6";
 
-  shuffleDeck(true, true);
+  shuffleDeck(true);
   renderDeck();
   renderSettingsPanel();
 
   await playShuffleAnimation();
 
+  setDeckWasExplicitlyShuffled(true);
   renderDeck();
+  saveState();
 
   shuffleBtnEl.style.opacity = "1";
   shuffleBusy = false;
@@ -131,13 +134,15 @@ async function handleShuffle() {
   shuffleBusy = true;
   shuffleBtnEl.style.opacity = "0.6";
 
-  shuffleDeck(false, true);
+  shuffleDeck(false);
   renderDeck();
   renderSettingsPanel();
 
   await playShuffleAnimation();
 
+  setDeckWasExplicitlyShuffled(true);
   renderDeck();
+  saveState();
 
   shuffleBtnEl.style.opacity = "1";
   shuffleBusy = false;

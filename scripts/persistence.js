@@ -6,6 +6,8 @@ import {
   setLastAppliedSettings,
   deckWasExplicitlyShuffled,
   setDeckWasExplicitlyShuffled,
+  collapsedSections,
+  setCollapsedSections,
 } from "./config.js";
 import { table, placedCards, createPlacedCard, positionCardAt, restackChain } from "./card.js";
 import { CARD_SETS, getDeckOrder, setDeckOrder, findCardByFile, resolveBackGrid } from "./deck.js";
@@ -38,6 +40,7 @@ export function saveState() {
         allUpright: lastAppliedSettings.allUpright,
       } : null,
       deckWasExplicitlyShuffled,
+      collapsedSections: [...collapsedSections],
       deckOrder: getDeckOrder().map(c => c.file),
       placedCards: [...placedCards.values()].map(s => ({
         instId: s.instId,
@@ -91,6 +94,18 @@ export function loadState() {
 
     setDeckWasExplicitlyShuffled(
       !!data.deckWasExplicitlyShuffled
+    );
+
+    setCollapsedSections(
+      Array.isArray(data.collapsedSections)
+        ? data.collapsedSections
+        : []
+    );
+
+    setDeckOrder(
+      (data.deckOrder || [])
+        .map(findCardByFile)
+        .filter(Boolean)
     );
 
     setDeckOrder((data.deckOrder || []).map(findCardByFile).filter(Boolean));
