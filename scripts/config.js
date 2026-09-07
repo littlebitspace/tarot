@@ -19,6 +19,15 @@ export const BASE_CELL_PX = 8; // glyphs are native 8x8px; 1x = true native size
 export const CARD_W = 17;
 export const CARD_H = 25;
 
+export const COLORS = {
+  ACCENT_COLOR: "redDark",
+  HOVER_COLOR: "cyan",
+  WARNING_COLOR: "yellow",
+  DEFAULT_COLOR: "white",
+  SECONDARY_COLOR: "gray",
+  DISABLED_COLOR: "grayDark"
+}
+
 export let SCALE = 2; // default: 2x (16px cells) for legibility
 export let CELL_PX = BASE_CELL_PX * SCALE;
 export let CARD_PX_W = CARD_W * CELL_PX;
@@ -48,6 +57,7 @@ export const settings = {
   showInterpretations: true,
   attachOnDrop: true, // dropping a card onto another card's pile attaches them into a chain
   cardsPerDraw: 1, // how many cards a single draw deals, chained together face-down
+  placeCardsTo: "top", // "top" or "bottom" of the deck stack when cards are returned to the deck
 };
 
 // The {enabledSets, sameBack, allUpright} actually baked into the current

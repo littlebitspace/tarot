@@ -33,6 +33,7 @@ export function saveState() {
         showInterpretations: settings.showInterpretations,
         attachOnDrop: settings.attachOnDrop,
         cardsPerDraw: settings.cardsPerDraw,
+        placeCardsTo: settings.placeCardsTo,
       },
       lastAppliedSettings: lastAppliedSettings ? {
         enabledSets: [...lastAppliedSettings.enabledSets],
@@ -84,6 +85,7 @@ export function loadState() {
     settings.showInterpretations = data.settings.showInterpretations !== false;
     settings.attachOnDrop = data.settings.attachOnDrop !== false;
     settings.cardsPerDraw = Math.max(1, data.settings.cardsPerDraw || 1);
+    settings.placeCardsTo = data.settings.placeCardsTo === "bottom" ? "bottom" : "top";
 
     if (data.scale) setScale(data.scale);
     setLastAppliedSettings(

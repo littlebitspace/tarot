@@ -1,5 +1,6 @@
 import {
-  CELL_PX, CARD_PX_W, CARD_PX_H,
+  CELL_PX, CARD_W, CARD_H, CARD_PX_W, CARD_PX_H,
+  COLORS,
   settings,
   lastAppliedSettings,
   setLastAppliedSettings,
@@ -139,10 +140,55 @@ const MAX_LAYERS = 3;
 export function getDeckOrder() { return deckOrder; }
 export function setDeckOrder(cards) { deckOrder = cards; }
 
+function buildEmptyDeckEl() {
+  const innerWidth = CARD_W - 2;
+
+  const center = text =>
+    text
+      .padStart(Math.floor((innerWidth + text.length) / 2))
+      .padEnd(innerWidth);
+
+  const lines = Array(CARD_H).fill(" ".repeat(CARD_W));
+
+  lines[0] = "╭" + "─".repeat(innerWidth) + "╮";
+  lines[CARD_H - 1] = "╰" + "─".repeat(innerWidth) + "╯";
+
+  const messageLines = [
+    "Drop cards",
+    "here to ",
+    "create a new",
+    "deck"
+  ];
+
+  const firstMessageRow =
+    Math.floor((CARD_H - 2 - messageLines.length) / 2) + 1;
+
+  messageLines.forEach((text, i) => {
+    lines[firstMessageRow + i] =
+      "│" + center(text) + "│";
+  });
+
+  for (let y = 1; y < CARD_H - 1; y++) {
+    if (!lines[y].startsWith("│")) {
+      lines[y] = "│" + " ".repeat(innerWidth) + "│";
+    }
+  }
+
+  return buildCardEl(
+    makeTextGrid(lines, COLORS.DISABLED_COLOR)
+  );
+}
+
 export function renderDeck() {
   deckStackEl.innerHTML = "";
   deckStackEl.style.width = (CARD_PX_W + (MAX_LAYERS - 1) * CELL_PX) + "px";
   deckStackEl.style.height = (CARD_PX_H + (MAX_LAYERS - 1) * CELL_PX) + "px";
+
+  if (deckOrder.length === 0) {
+    const emptyDeckEl = buildEmptyDeckEl();
+    emptyDeckEl.style.transform = `translate(${CELL_PX}px, ${CELL_PX}px)`;
+    deckStackEl.appendChild(emptyDeckEl);
+  }
 
   const layers = Math.min(MAX_LAYERS, deckOrder.length);
   const startOffset = (MAX_LAYERS - layers) * CELL_PX;
@@ -343,21 +389,38 @@ deckStackEl.addEventListener("pointerdown", (e) => {
    reading to use.
    ========================================================================= */
 setOnChainDropped((chain) => {
-  if (deckOrder.length !== 0) return false;
-
   const dRect = deckStackEl.getBoundingClientRect();
+
   const overlapsDeck = chain.some(s => {
     const cr = s.el.getBoundingClientRect();
-    return !(cr.right <= dRect.left || cr.left >= dRect.right || cr.bottom <= dRect.top || cr.top >= dRect.bottom);
+
+    return !(
+      cr.right <= dRect.left ||
+      cr.left >= dRect.right ||
+      cr.bottom <= dRect.top ||
+      cr.top >= dRect.bottom
+    );
   });
+
   if (!overlapsDeck) return false;
 
   const faceUpCount = chain.filter(s => s.faceUp).length;
   const majorityFaceUp = faceUpCount * 2 > chain.length;
-  const chronological = majorityFaceUp ? chain : chain.slice().reverse();
 
-  deckOrder = chronological.map(s => s.card);
-  chain.forEach(s => { placedCards.delete(s.instId); s.el.remove(); });
+  const chronological = majorityFaceUp
+    ? chain
+    : chain.slice().reverse();
+
+  const cards = chronological.map(s => s.card);
+
+  deckOrder = settings.placeCardsTo === "top"
+    ? [...cards, ...deckOrder]
+    : [...deckOrder, ...cards];
+
+  chain.forEach(s => {
+    placedCards.delete(s.instId);
+    s.el.remove();
+  });
 
   setDeckWasExplicitlyShuffled(false);
 

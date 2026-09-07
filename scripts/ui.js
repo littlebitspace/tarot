@@ -1,6 +1,7 @@
 import {
   SCALE,
   CELL_PX,
+  COLORS,
   setScale,
   settings,
   lastAppliedSettings,
@@ -33,23 +34,16 @@ const settingsPanelEl = document.getElementById("settingsPanel");
 const deckAreaEl = document.getElementById("deckArea");
 const scaleControlEl = document.getElementById("scaleControl");
 
-// PETSCII palette colour used for checkbox markers.
-const ACCENT_COLOR = "redDark";
-const HOVER_COLOR = "cyan";
-const WARNING_COLOR = "yellow";
-const DEFAULT_COLOR = "white";
-const DISABLED_COLOR = "grayDark";
-
 function applyHoverColor(el) {
-  const hoverColor = COLOR_HEX[HOVER_COLOR];
-  const accentColor = COLOR_HEX[ACCENT_COLOR];
+  const hoverColor = COLOR_HEX[COLORS.HOVER_COLOR];
+  const accentColor = COLOR_HEX[COLORS.ACCENT_COLOR];
 
   if (!hoverColor) {
-    throw new Error(`Invalid PETSCII hover colour: ${HOVER_COLOR}`);
+    throw new Error(`Invalid PETSCII hover colour: ${COLORS.HOVER_COLOR}`);
   }
 
   if (!accentColor) {
-    throw new Error(`Invalid PETSCII accent colour: ${ACCENT_COLOR}`);
+    throw new Error(`Invalid PETSCII accent colour: ${COLORS.ACCENT_COLOR}`);
   }
 
   el.classList.add("hoverable");
@@ -71,7 +65,7 @@ function delay(ms) {
 function setButtonDisabled(el, disabled) {
   if (disabled) {
     el.classList.add("disabled");
-    el.style.setProperty("--disabled-color", COLOR_HEX[DISABLED_COLOR]);
+    el.style.setProperty("--disabled-color", COLOR_HEX[COLORS.DISABLED_COLOR]);
     el.style.cursor = "default";
     el.setAttribute("aria-disabled", "true");
     el.style.pointerEvents = "none";
@@ -84,7 +78,7 @@ function setButtonDisabled(el, disabled) {
   }
 }
 
-function buildActionBtn(label, color = DEFAULT_COLOR, width = label.length) {
+function buildActionBtn(label, color = COLORS.DEFAULT_COLOR, width = label.length) {
   const inner = ` ${label.padStart(Math.ceil((width + label.length) / 2)).padEnd(width)} `;
   const border = "─".repeat(inner.length);
 
@@ -114,7 +108,7 @@ function renderShuffleBtn() {
 
   const shuffleAllBtn = buildActionBtn(
     shuffleAllConfirm ? "CONFIRM?" : "SHUFFLE ALL",
-    shuffleAllConfirm ? WARNING_COLOR : DEFAULT_COLOR,
+    shuffleAllConfirm ? COLORS.WARNING_COLOR : COLORS.DEFAULT_COLOR,
     "SHUFFLE ALL".length
   );
 
@@ -122,7 +116,7 @@ function renderShuffleBtn() {
     shuffleAllBtn.classList.add("shuffle-all-confirm");
     shuffleAllBtn.style.setProperty(
       "--warning-color",
-      COLOR_HEX["yellow"]
+      COLOR_HEX[COLORS.WARNING_COLOR]
     );
   }
 
@@ -232,7 +226,7 @@ function addSettingsLine(grid, onClick) {
 
 function addBlankLine() {
   settingsPanelEl.appendChild(
-    buildCardEl(makeTextGrid([""], DEFAULT_COLOR))
+    buildCardEl(makeTextGrid([""], COLORS.DEFAULT_COLOR))
   );
 }
 
@@ -255,8 +249,8 @@ function makeCheckboxGrid(state, label, indent = "") {
   const cells = Array.from(text, (char, index) => ({
     char,
     color: index === markerIndex
-      ? ACCENT_COLOR
-      : DEFAULT_COLOR,
+      ? COLORS.ACCENT_COLOR
+      : COLORS.DEFAULT_COLOR,
     preserveHover: index === markerIndex,
   }));
 
@@ -271,7 +265,7 @@ function makeCheckboxGrid(state, label, indent = "") {
 function makeSectionHeaderGrid(label, collapsed) {
   return makeTextGrid([
     `${label} [${collapsed ? "v" : "^"}]`,
-  ], DEFAULT_COLOR);
+  ], COLORS.DEFAULT_COLOR);
 }
 
 function getGroupState(group) {
@@ -428,7 +422,7 @@ function buildCardsSection() {
 
       rows.push(
         createSettingsRow(
-          makeTextGrid([""], DEFAULT_COLOR)
+          makeTextGrid([""], COLORS.DEFAULT_COLOR)
         )
       );
     }
@@ -458,7 +452,7 @@ function buildCardsSection() {
 
     rows.push(
       createSettingsRow(
-        makeTextGrid([""], DEFAULT_COLOR)
+        makeTextGrid([""], COLORS.DEFAULT_COLOR)
       )
     );
   }
@@ -486,7 +480,7 @@ function buildCardOptionsSection() {
 
   rows.push(
     createSettingsRow(
-      makeTextGrid([""], DEFAULT_COLOR)
+      makeTextGrid([""], COLORS.DEFAULT_COLOR)
     )
   );
 
@@ -507,7 +501,7 @@ function buildCardOptionsSection() {
 
   rows.push(
     createSettingsRow(
-      makeTextGrid([""], DEFAULT_COLOR)
+      makeTextGrid([""], COLORS.DEFAULT_COLOR)
     )
   );
 
@@ -549,7 +543,7 @@ function renderSettingsPanel() {
       label: definition.label,
       header,
       contentRows: [
-        createSettingsRow(makeTextGrid([""], DEFAULT_COLOR)),
+        createSettingsRow(makeTextGrid([""], COLORS.DEFAULT_COLOR)),
         ...definition.build(),
       ],
     };
@@ -562,7 +556,7 @@ function renderSettingsPanel() {
       });
     }
     settingsPanelEl.appendChild(
-      createSettingsRow(makeTextGrid([""], DEFAULT_COLOR))
+      createSettingsRow(makeTextGrid([""], COLORS.DEFAULT_COLOR))
     );
   }
 
@@ -576,7 +570,7 @@ function renderSettingsPanel() {
     addSettingsLine(
       makeTextGrid(
         ["Shuffle to apply deck changes"],
-        WARNING_COLOR
+        COLORS.WARNING_COLOR
       )
     );
   }
@@ -604,7 +598,7 @@ function buildPreferencesSection() {
 
   rows.push(
     createSettingsRow(
-      makeTextGrid([""], DEFAULT_COLOR)
+      makeTextGrid([""], COLORS.DEFAULT_COLOR)
     )
   );
 
@@ -625,7 +619,7 @@ function buildPreferencesSection() {
 
   rows.push(
     createSettingsRow(
-      makeTextGrid([""], DEFAULT_COLOR)
+      makeTextGrid([""], COLORS.DEFAULT_COLOR)
     )
   );
 
@@ -646,7 +640,7 @@ function buildPreferencesSection() {
 
   rows.push(
     createSettingsRow(
-      makeTextGrid([""], DEFAULT_COLOR)
+      makeTextGrid([""], COLORS.DEFAULT_COLOR)
     )
   );
 
@@ -666,7 +660,7 @@ function buildPreferencesSection() {
   const labelEl = buildCardEl(
     makeTextGrid(
       [`Cards per draw: ${settings.cardsPerDraw}`],
-      DEFAULT_COLOR
+      COLORS.DEFAULT_COLOR
     )
   );
 
@@ -689,7 +683,66 @@ function buildPreferencesSection() {
 
   rows.push(
     createSettingsRow(
-      makeTextGrid([""], DEFAULT_COLOR)
+      makeTextGrid([""], COLORS.DEFAULT_COLOR)
+    )
+  );
+
+  const placeCardsRow = document.createElement("div");
+  placeCardsRow.style.display = "flex";
+  placeCardsRow.style.alignItems = "center";
+  placeCardsRow.style.gap = CELL_PX + "px";
+
+  const placeCardsLabel = buildCardEl(
+    makeTextGrid(["Place cards to:"], COLORS.DEFAULT_COLOR)
+  );
+
+  const topEl = buildCardEl(
+    makeTextGrid(
+      ["top"],
+      settings.placeCardsTo === "top"
+        ? COLORS.ACCENT_COLOR
+        : COLORS.SECONDARY_COLOR
+    )
+  );
+  applyHoverColor(topEl);
+
+  const bottomEl = buildCardEl(
+    makeTextGrid(
+      ["bottom"],
+      settings.placeCardsTo === "bottom"
+        ? COLORS.ACCENT_COLOR
+        : COLORS.SECONDARY_COLOR
+    )
+  );
+  applyHoverColor(bottomEl);
+
+  topEl.addEventListener("click", () => {
+    if (settingsAnimation) return;
+
+    settings.placeCardsTo = "top";
+    setDeckWasExplicitlyShuffled(false);
+    saveState();
+    renderSettingsPanel();
+  });
+
+  bottomEl.addEventListener("click", () => {
+    if (settingsAnimation) return;
+
+    settings.placeCardsTo = "bottom";
+    setDeckWasExplicitlyShuffled(false);
+    saveState();
+    renderSettingsPanel();
+  });
+
+  placeCardsRow.appendChild(placeCardsLabel);
+  placeCardsRow.appendChild(topEl);
+  placeCardsRow.appendChild(bottomEl);
+
+  rows.push(placeCardsRow);
+
+  rows.push(
+    createSettingsRow(
+      makeTextGrid([""], COLORS.DEFAULT_COLOR)
     )
   );
 
@@ -720,7 +773,7 @@ function buildPreferencesSection() {
 
   rows.push(
     createSettingsRow(
-      makeTextGrid([""], DEFAULT_COLOR)
+      makeTextGrid([""], COLORS.DEFAULT_COLOR)
     )
   );
 
@@ -735,7 +788,7 @@ function buildMiniBtn(label, onClick) {
     "╭" + border + "╮",
     "│" + inner + "│",
     "╰" + border + "╯",
-  ], DEFAULT_COLOR);
+  ], COLORS.DEFAULT_COLOR);
 
   const el = buildCardEl(grid);
   el.classList.add("btn");
@@ -760,7 +813,7 @@ function renderScaleControl() {
   });
 
   const label = buildCardEl(
-    makeTextGrid([`Scale ${SCALE}x`], "white")
+    makeTextGrid([`Scale ${SCALE}x`], COLORS.DEFAULT_COLOR)
   );
 
   const plusBtn = buildMiniBtn("+", () => {
@@ -851,7 +904,7 @@ function renderLoadErrors(errors) {
   }
 
   const box = buildCardEl(
-    makeTextGrid(lines, "red")
+    makeTextGrid(lines, COLORS.WARNING_COLOR)
   );
 
   box.style.marginTop = "12px";
