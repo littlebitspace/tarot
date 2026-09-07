@@ -9,7 +9,12 @@ import {
   setDeckWasExplicitlyShuffled,
   collapsedSections,
 } from "./config.js";
-import { makeTextGrid, wrapText, buildCardEl } from "./renderer.js";
+import {
+  makeTextGrid,
+  wrapText,
+  buildCardEl,
+  COLOR_HEX,
+} from "./renderer.js";
 import { placedCards, clamp, refreshCardSize, setOnStateChanged } from "./card.js";
 import { CARD_SETS, loadManifest, renderDeck, shuffleDeck, playShuffleAnimation } from "./deck.js";
 import { saveState, loadState } from "./persistence.js";
@@ -30,6 +35,27 @@ const scaleControlEl = document.getElementById("scaleControl");
 
 // PETSCII palette colour used for checkbox markers.
 const ACCENT_COLOR = "redDark";
+const HOVER_COLOR = "cyan";
+const WARNING_COLOR = "yellow";
+const DEFAULT_COLOR = "white";
+
+function applyHoverColor(el) {
+  const hoverColor = COLOR_HEX[HOVER_COLOR];
+  const accentColor = COLOR_HEX[ACCENT_COLOR];
+
+  if (!hoverColor) {
+    throw new Error(`Invalid PETSCII hover colour: ${HOVER_COLOR}`);
+  }
+
+  if (!accentColor) {
+    throw new Error(`Invalid PETSCII accent colour: ${ACCENT_COLOR}`);
+  }
+
+  el.classList.add("hoverable");
+  el.style.setProperty("--hover-color", hoverColor);
+  el.style.setProperty("--accent-color", accentColor);
+  el.style.cursor = "pointer";
+}
 
 // Delay between rows when expanding/collapsing a settings section.
 const SETTINGS_ROW_DELAY = 60;
@@ -41,7 +67,7 @@ function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function buildActionBtn(label, color = "white", width = label.length) {
+function buildActionBtn(label, color = DEFAULT_COLOR, width = label.length) {
   const inner = ` ${label.padStart(Math.ceil((width + label.length) / 2)).padEnd(width)} `;
   const border = "─".repeat(inner.length);
 
@@ -51,7 +77,11 @@ function buildActionBtn(label, color = "white", width = label.length) {
     "╰" + border + "╯",
   ], color);
 
-  return buildCardEl(grid);
+  const el = buildCardEl(grid);
+  el.classList.add("btn");
+  applyHoverColor(el);
+
+  return el;
 }
 
 function renderShuffleBtn() {
@@ -67,9 +97,17 @@ function renderShuffleBtn() {
 
   const shuffleAllBtn = buildActionBtn(
     shuffleAllConfirm ? "CONFIRM?" : "SHUFFLE ALL",
-    shuffleAllConfirm ? "yellow" : "white",
+    shuffleAllConfirm ? WARNING_COLOR : DEFAULT_COLOR,
     "SHUFFLE ALL".length
   );
+
+  if (shuffleAllConfirm) {
+    shuffleAllBtn.classList.add("shuffle-all-confirm");
+    shuffleAllBtn.style.setProperty(
+      "--warning-color",
+      COLOR_HEX["yellow"]
+    );
+  }
 
   shuffleAllBtn.addEventListener("click", handleShuffleAll);
 
@@ -157,6 +195,7 @@ function addSettingsLine(grid, onClick) {
 
   if (onClick) {
     el.style.cursor = "pointer";
+    applyHoverColor(el);
     el.addEventListener("click", onClick);
   }
 
@@ -166,7 +205,7 @@ function addSettingsLine(grid, onClick) {
 
 function addBlankLine() {
   settingsPanelEl.appendChild(
-    buildCardEl(makeTextGrid([""], "white"))
+    buildCardEl(makeTextGrid([""], DEFAULT_COLOR))
   );
 }
 
@@ -188,10 +227,10 @@ function makeCheckboxGrid(state, label, indent = "") {
 
   const cells = Array.from(text, (char, index) => ({
     char,
-    color:
-      (marker === "x" || marker === "-") && index === markerIndex
-        ? ACCENT_COLOR
-        : "white",
+    color: index === markerIndex
+      ? ACCENT_COLOR
+      : DEFAULT_COLOR,
+    preserveHover: index === markerIndex,
   }));
 
   return {
@@ -205,7 +244,7 @@ function makeCheckboxGrid(state, label, indent = "") {
 function makeSectionHeaderGrid(label, collapsed) {
   return makeTextGrid([
     `${label} [${collapsed ? "v" : "^"}]`,
-  ], "white");
+  ], DEFAULT_COLOR);
 }
 
 function getGroupState(group) {
@@ -268,7 +307,7 @@ function createSettingsRow(grid, onClick) {
   const el = buildCardEl(grid);
 
   if (onClick) {
-    el.style.cursor = "pointer";
+    applyHoverColor(el);
     el.addEventListener("click", onClick);
   }
 
@@ -328,7 +367,7 @@ function createSectionHeaderElement(section, collapsed) {
     makeSectionHeaderGrid(section.label, collapsed)
   );
 
-  el.style.cursor = "pointer";
+  applyHoverColor(el);
   el.addEventListener("click", () => toggleSection(section.id));
 
   section.header = el;
@@ -362,7 +401,7 @@ function buildCardsSection() {
 
       rows.push(
         createSettingsRow(
-          makeTextGrid([""], "white")
+          makeTextGrid([""], DEFAULT_COLOR)
         )
       );
     }
@@ -392,7 +431,7 @@ function buildCardsSection() {
 
     rows.push(
       createSettingsRow(
-        makeTextGrid([""], "white")
+        makeTextGrid([""], DEFAULT_COLOR)
       )
     );
   }
@@ -420,7 +459,7 @@ function buildCardOptionsSection() {
 
   rows.push(
     createSettingsRow(
-      makeTextGrid([""], "white")
+      makeTextGrid([""], DEFAULT_COLOR)
     )
   );
 
@@ -441,124 +480,12 @@ function buildCardOptionsSection() {
 
   rows.push(
     createSettingsRow(
-      makeTextGrid([""], "white")
+      makeTextGrid([""], DEFAULT_COLOR)
     )
   );
 
   return rows;
 }
-
-// function buildInteractionSection() {
-//   const rows = [];
-
-//   rows.push(
-//     createSettingsRow(
-//       makeCheckboxGrid(
-//         settings.attachOnDrop ? "on" : "off",
-//         "Attach cards on drop"
-//       ),
-//       () => {
-//         if (settingsAnimation) return;
-
-//         settings.attachOnDrop = !settings.attachOnDrop;
-//         renderSettingsPanel();
-//       }
-//     )
-//   );
-
-//   rows.push(
-//     createSettingsRow(
-//       makeTextGrid([""], "white")
-//     )
-//   );
-
-//   const cardsPerDrawRow = document.createElement("div");
-//   cardsPerDrawRow.style.display = "flex";
-//   cardsPerDrawRow.style.alignItems = "center";
-//   cardsPerDrawRow.style.gap = CELL_PX + "px";
-
-//   const minusEl = buildMiniBtn("-", () => {
-//     if (settingsAnimation) return;
-
-//     settings.cardsPerDraw = clamp(
-//       settings.cardsPerDraw - 1,
-//       1,
-//       10
-//     );
-
-//     renderSettingsPanel();
-//   });
-
-//   const labelEl = buildCardEl(
-//     makeTextGrid(
-//       [`Cards per draw: ${settings.cardsPerDraw}`],
-//       "white"
-//     )
-//   );
-
-//   const plusEl = buildMiniBtn("+", () => {
-//     if (settingsAnimation) return;
-
-//     settings.cardsPerDraw = clamp(
-//       settings.cardsPerDraw + 1,
-//       1,
-//       10
-//     );
-
-//     renderSettingsPanel();
-//   });
-
-//   cardsPerDrawRow.appendChild(minusEl);
-//   cardsPerDrawRow.appendChild(labelEl);
-//   cardsPerDrawRow.appendChild(plusEl);
-
-//   rows.push(cardsPerDrawRow);
-
-//   rows.push(
-//     createSettingsRow(
-//       makeTextGrid([""], "white")
-//     )
-//   );
-
-//   return rows;
-// }
-
-// function buildDisplaySection() {
-//   const rows = [];
-
-//   rows.push(
-//     createSettingsRow(
-//       makeCheckboxGrid(
-//         settings.showInterpretations ? "on" : "off",
-//         "Show Interpretations"
-//       ),
-//       () => {
-//         if (settingsAnimation) return;
-
-//         settings.showInterpretations = !settings.showInterpretations;
-
-//         placedCards.forEach(state => {
-//           if (state.tipEl.children.length) {
-//             state.tipEl.style.display =
-//               settings.showInterpretations
-//                 ? "block"
-//                 : "none";
-//           }
-//         });
-
-//         renderSettingsPanel();
-//       }
-//     )
-//   );
-
-//   rows.push(
-//     createSettingsRow(
-//       makeTextGrid([""], "white")
-//     )
-//   );
-
-//   return rows;
-// }
 
 function renderSettingsPanel() {
   settingsPanelEl.innerHTML = "";
@@ -595,7 +522,7 @@ function renderSettingsPanel() {
       label: definition.label,
       header,
       contentRows: [
-        createSettingsRow(makeTextGrid([""], "white")),
+        createSettingsRow(makeTextGrid([""], DEFAULT_COLOR)),
         ...definition.build(),
       ],
     };
@@ -608,7 +535,7 @@ function renderSettingsPanel() {
       });
     }
     settingsPanelEl.appendChild(
-      createSettingsRow(makeTextGrid([""], "white"))
+      createSettingsRow(makeTextGrid([""], DEFAULT_COLOR))
     );
   }
 
@@ -622,7 +549,7 @@ function renderSettingsPanel() {
     addSettingsLine(
       makeTextGrid(
         ["Shuffle to apply deck changes"],
-        "yellow"
+        WARNING_COLOR
       )
     );
   }
@@ -650,7 +577,7 @@ function buildPreferencesSection() {
 
   rows.push(
     createSettingsRow(
-      makeTextGrid([""], "white")
+      makeTextGrid([""], DEFAULT_COLOR)
     )
   );
 
@@ -671,7 +598,7 @@ function buildPreferencesSection() {
 
   rows.push(
     createSettingsRow(
-      makeTextGrid([""], "white")
+      makeTextGrid([""], DEFAULT_COLOR)
     )
   );
 
@@ -692,7 +619,7 @@ function buildPreferencesSection() {
 
   rows.push(
     createSettingsRow(
-      makeTextGrid([""], "white")
+      makeTextGrid([""], DEFAULT_COLOR)
     )
   );
 
@@ -716,7 +643,7 @@ function buildPreferencesSection() {
   const labelEl = buildCardEl(
     makeTextGrid(
       [`Cards per draw: ${settings.cardsPerDraw}`],
-      "white"
+      DEFAULT_COLOR
     )
   );
 
@@ -740,7 +667,7 @@ function buildPreferencesSection() {
 
   rows.push(
     createSettingsRow(
-      makeTextGrid([""], "white")
+      makeTextGrid([""], DEFAULT_COLOR)
     )
   );
 
@@ -771,7 +698,7 @@ function buildPreferencesSection() {
 
   rows.push(
     createSettingsRow(
-      makeTextGrid([""], "white")
+      makeTextGrid([""], DEFAULT_COLOR)
     )
   );
 
@@ -786,10 +713,11 @@ function buildMiniBtn(label, onClick) {
     "╭" + border + "╮",
     "│" + inner + "│",
     "╰" + border + "╯",
-  ], "white");
+  ], DEFAULT_COLOR);
 
   const el = buildCardEl(grid);
   el.classList.add("btn");
+  applyHoverColor(el);
   el.addEventListener("click", onClick);
 
   return el;
@@ -805,7 +733,7 @@ function renderScaleControl() {
   const minusEl = buildMiniBtn("-", () => applyScale(SCALE - 1));
 
   const labelEl = buildCardEl(
-    makeTextGrid([`Scale ${SCALE}x`], "white")
+    makeTextGrid([`Scale ${SCALE}x`], DEFAULT_COLOR)
   );
 
   const plusEl = buildMiniBtn("+", () => applyScale(SCALE + 1));

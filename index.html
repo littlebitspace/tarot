@@ -30,8 +30,6 @@
     display: flex;
     align-items: center;
   }
-  #scaleControl .card-pre { cursor: default; }
-  #scaleControl .btn { cursor: pointer; }
   #deckArea {
     position: absolute;
     z-index: 50; /* must stay BELOW placed-card z-indices (start at 100+) */
@@ -41,6 +39,7 @@
   #deckStack {
     position: relative;
     touch-action: none;
+    cursor: pointer;
   }
   #deckCount {
     display: flex;
@@ -48,11 +47,8 @@
     align-items: center;
   }
   #shuffleBtn {
-    cursor: pointer;
     display: inline-block;
   }
-  #shuffleBtn:hover .card-pre { opacity: 0.85; }
-  #settingsPanel .card-pre[style*="cursor: pointer"]:hover { opacity: 0.85; }
   .card-pre {
     margin: 0;
     font-family: 'C64 Pro', 'C64 Pro Mono', monospace;
@@ -65,6 +61,18 @@
   }
   .card-visual { pointer-events: none; display: flex; justify-content: center; }
   .card-tip { pointer-events: none; }
+  .hoverable:hover,
+  .hoverable:hover * {
+    color: var(--hover-color) !important;
+  }
+
+  .hoverable:hover .preserve-hover {
+    color: var(--accent-color) !important;
+  }
+  .shuffle-all-confirm:hover,
+  .shuffle-all-confirm:hover * {
+    color: var(--warning-color) !important;
+  }
 </style>
 </head>
 <body>

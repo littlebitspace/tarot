@@ -106,11 +106,26 @@ export function wrapText(text, width) {
 export function rleRow(cells, width, y) {
   const runs = [];
   let cur = null;
+
   for (let x = 0; x < width; x++) {
     const c = cells[y * width + x];
-    if (cur && cur.color === c.color) cur.text += c.char;
-    else { cur = { color: c.color, text: c.char }; runs.push(cur); }
+
+    if (
+      cur &&
+      cur.color === c.color &&
+      cur.preserveHover === c.preserveHover
+    ) {
+      cur.text += c.char;
+    } else {
+      cur = {
+        color: c.color,
+        text: c.char,
+        preserveHover: !!c.preserveHover,
+      };
+      runs.push(cur);
+    }
   }
+
   return runs;
 }
 
@@ -143,7 +158,12 @@ export function updateCardEl(pre, grid) {
       if (!span) { span = document.createElement("span"); row.appendChild(span); }
       if (span.textContent !== r.text) span.textContent = r.text;
       const hex = COLOR_HEX[r.color];
-      if (span.style.color !== hex) span.style.color = hex;
+
+      if (span.style.color !== hex) {
+        span.style.color = hex;
+      }
+
+      span.classList.toggle("preserve-hover", r.preserveHover);
     });
   }
 }
