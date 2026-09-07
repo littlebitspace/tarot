@@ -38,6 +38,7 @@ const ACCENT_COLOR = "redDark";
 const HOVER_COLOR = "cyan";
 const WARNING_COLOR = "yellow";
 const DEFAULT_COLOR = "white";
+const DISABLED_COLOR = "grayDark";
 
 function applyHoverColor(el) {
   const hoverColor = COLOR_HEX[HOVER_COLOR];
@@ -65,6 +66,22 @@ let settingsAnimation = false;
 
 function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function setButtonDisabled(el, disabled) {
+  if (disabled) {
+    el.classList.add("disabled");
+    el.style.setProperty("--disabled-color", COLOR_HEX[DISABLED_COLOR]);
+    el.style.cursor = "default";
+    el.setAttribute("aria-disabled", "true");
+    el.style.pointerEvents = "none";
+  } else {
+    el.classList.remove("disabled");
+    el.style.removeProperty("--disabled-color");
+    el.style.cursor = "pointer";
+    el.removeAttribute("aria-disabled");
+    el.style.pointerEvents = "";
+  }
 }
 
 function buildActionBtn(label, color = DEFAULT_COLOR, width = label.length) {
@@ -150,40 +167,50 @@ async function handleShuffleAll() {
   renderShuffleBtn();
 
   shuffleBusy = true;
-  shuffleBtnEl.style.opacity = "0.6";
 
-  shuffleDeck(true);
-  renderDeck();
-  renderSettingsPanel();
+  // Disable both shuffle buttons while the animation is playing
+  const buttons = shuffleBtnEl.querySelectorAll(".btn");
+  buttons.forEach(btn => setButtonDisabled(btn, true));
 
-  await playShuffleAnimation();
+  try {
+    shuffleDeck(true);
+    renderDeck();
+    renderSettingsPanel();
 
-  setDeckWasExplicitlyShuffled(true);
-  renderDeck();
-  saveState();
+    await playShuffleAnimation();
 
-  shuffleBtnEl.style.opacity = "1";
-  shuffleBusy = false;
+    setDeckWasExplicitlyShuffled(true);
+    renderDeck();
+    saveState();
+  } finally {
+    buttons.forEach(btn => setButtonDisabled(btn, false));
+    shuffleBusy = false;
+  }
 }
 
 async function handleShuffle() {
   if (shuffleBusy) return;
 
   shuffleBusy = true;
-  shuffleBtnEl.style.opacity = "0.6";
 
-  shuffleDeck(false);
-  renderDeck();
-  renderSettingsPanel();
+  // Disable both shuffle buttons while the animation is playing
+  const buttons = shuffleBtnEl.querySelectorAll(".btn");
+  buttons.forEach(btn => setButtonDisabled(btn, true));
 
-  await playShuffleAnimation();
+  try {
+    shuffleDeck(false);
+    renderDeck();
+    renderSettingsPanel();
 
-  setDeckWasExplicitlyShuffled(true);
-  renderDeck();
-  saveState();
+    await playShuffleAnimation();
 
-  shuffleBtnEl.style.opacity = "1";
-  shuffleBusy = false;
+    setDeckWasExplicitlyShuffled(true);
+    renderDeck();
+    saveState();
+  } finally {
+    buttons.forEach(btn => setButtonDisabled(btn, false));
+    shuffleBusy = false;
+  }
 }
 
 /* ------------------------------------------------------------------------- */
@@ -628,16 +655,12 @@ function buildPreferencesSection() {
   cardsPerDrawRow.style.alignItems = "center";
   cardsPerDrawRow.style.gap = CELL_PX + "px";
 
-  const minusEl = buildMiniBtn("-", () => {
-    if (settingsAnimation) return;
-
-    settings.cardsPerDraw = clamp(
-      settings.cardsPerDraw - 1,
-      1,
-      10
-    );
-
-    renderSettingsPanel();
+  const minusBtn = buildMiniBtn("-", () => {
+    if (settings.cardsPerDraw > 1) {
+      settings.cardsPerDraw--;
+      saveState();
+      renderSettingsPanel();
+    }
   });
 
   const labelEl = buildCardEl(
@@ -647,21 +670,20 @@ function buildPreferencesSection() {
     )
   );
 
-  const plusEl = buildMiniBtn("+", () => {
-    if (settingsAnimation) return;
-
-    settings.cardsPerDraw = clamp(
-      settings.cardsPerDraw + 1,
-      1,
-      10
-    );
-
-    renderSettingsPanel();
+  const plusBtn = buildMiniBtn("+", () => {
+    if (settings.cardsPerDraw < 10) {
+      settings.cardsPerDraw++;
+      saveState();
+      renderSettingsPanel();
+    }
   });
 
-  cardsPerDrawRow.appendChild(minusEl);
+  setButtonDisabled(minusBtn, settings.cardsPerDraw <= 1);
+  setButtonDisabled(plusBtn, settings.cardsPerDraw >= 10);
+
+  cardsPerDrawRow.appendChild(minusBtn);
   cardsPerDrawRow.appendChild(labelEl);
-  cardsPerDrawRow.appendChild(plusEl);
+  cardsPerDrawRow.appendChild(plusBtn);
 
   rows.push(cardsPerDrawRow);
 
@@ -730,17 +752,30 @@ function buildMiniBtn(label, onClick) {
 function renderScaleControl() {
   scaleControlEl.innerHTML = "";
 
-  const minusEl = buildMiniBtn("-", () => applyScale(SCALE - 1));
+  const minusBtn = buildMiniBtn("-", () => {
+    if (SCALE > 1) {
+      setScale(SCALE - 1);
+      refreshForScale();
+    }
+  });
 
-  const labelEl = buildCardEl(
-    makeTextGrid([`Scale ${SCALE}x`], DEFAULT_COLOR)
+  const label = buildCardEl(
+    makeTextGrid([`Scale ${SCALE}x`], "white")
   );
 
-  const plusEl = buildMiniBtn("+", () => applyScale(SCALE + 1));
+  const plusBtn = buildMiniBtn("+", () => {
+    if (SCALE < 4) {
+      setScale(SCALE + 1);
+      refreshForScale();
+    }
+  });
 
-  scaleControlEl.appendChild(minusEl);
-  scaleControlEl.appendChild(labelEl);
-  scaleControlEl.appendChild(plusEl);
+  setButtonDisabled(minusBtn, SCALE <= 1);
+  setButtonDisabled(plusBtn, SCALE >= 4);
+
+  scaleControlEl.appendChild(minusBtn);
+  scaleControlEl.appendChild(label);
+  scaleControlEl.appendChild(plusBtn);
 }
 
 function layoutChrome() {
