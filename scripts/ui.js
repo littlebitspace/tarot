@@ -941,4 +941,11 @@ async function init() {
   renderLoadErrors(errors);
 }
 
+document.addEventListener("keydown", (event) => {
+  if (event.ctrlKey && event.altKey && event.key.toLowerCase() === "g") {
+    event.preventDefault();
+    table.classList.toggle("debug-grid");
+  }
+});
+
 init();
