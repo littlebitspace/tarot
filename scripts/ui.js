@@ -860,6 +860,7 @@ function refreshForScale() {
   renderDeck();
   renderScaleControl();
   layoutChrome();
+  renderSettingsPanel();
 }
 
 function applyScale(newScale) {
