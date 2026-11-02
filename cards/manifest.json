@@ -498,21 +498,21 @@
         },
         {
           "file": "cards/tarot/0523.json",
+          "name": "The Gardener",
+          "meaningUpright": "Growth, Nurturing, Acceptance of cycles",
+          "meaningReversed": "Neglect, Stagnation, Resistance to change"
+        },
+        {
+          "file": "cards/tarot/0524.json",
           "name": "The Dreamer",
           "meaningUpright": "Imagination, Introspection, Transcendence",
           "meaningReversed": "Escapism, Delusion, Detachment"
         },
         {
-          "file": "cards/tarot/0524.json",
+          "file": "cards/tarot/0525.json",
           "name": "The Architect",
           "meaningUpright": "Creation, Structure, Vision",
           "meaningReversed": "Rigidity, Overplanning, Destruction of foundations"
-        },
-        {
-          "file": "cards/tarot/0525.json",
-          "name": "The Gardener",
-          "meaningUpright": "Growth, Nurturing, Acceptance of cycles",
-          "meaningReversed": "Neglect, Stagnation, Resistance to change"
         },
         {
           "file": "cards/tarot/0526.json",
